@@ -34,7 +34,7 @@ export function Hero() {
         <Doodle
           scene="cow"
           interactive
-          label="A single-line doodle of a cow, drawn as you move the cursor or scroll"
+          label="A single-line doodle of a cow nursing her calf, drawn as you move the cursor or scroll"
         />
       </div>
     </section>

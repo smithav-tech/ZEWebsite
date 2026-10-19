@@ -8,7 +8,7 @@ export function Feed() {
       id="feed"
       kicker="feed & fodder · tmr"
       doodle="feed"
-      doodleLabel="Fodder grass, a tractor carrying fodder, and a feed bowl"
+      doodleLabel="One line through fodder grass, a bowl of mixed feed, and a tractor pulling a trailer of hay bales"
     >
       <h2 className="display">
         From Volume

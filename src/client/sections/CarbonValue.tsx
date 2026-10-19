@@ -8,7 +8,7 @@ export function CarbonValue() {
       kicker="carbon value"
       doodle="offsets"
       glow
-      doodleLabel="A chart of falling emissions, a credit certificate with a seal, and a stack of coins with a seedling growing from it"
+      doodleLabel="A stack of coins with a seedling growing from it, an arrow pointing down, and a credit certificate with a seal"
     >
       <h2 className="display">
         Reductions First.

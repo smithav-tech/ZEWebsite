@@ -8,7 +8,7 @@ export function Energy() {
       id="energy"
       kicker="green energy"
       doodle="energy"
-      doodleLabel="A cow, her manure going into a biogas plant that makes CBG, and organic fertiliser feeding the fodder fields"
+      doodleLabel="One loop from fodder to a cow, her manure, a biogas plant filling a gas cylinder, a fertiliser sack, and back to the fodder"
     >
       <h2 className="display">
         What Remains

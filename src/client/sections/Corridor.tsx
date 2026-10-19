@@ -8,7 +8,7 @@ export function Corridor() {
       id="corridor"
       kicker="the corridor"
       doodle="corridor"
-      doodleLabel="One route linking a cow, a sack of CH4OW feed, a tractor, a milk can, a biogas plant with its flame, and a phone showing data"
+      doodleLabel="One winding road linking a cow, a bundle of feed, a tractor, a milk can, a biogas dome and a phone showing a rising graph"
     >
       <h2 className="display">
         One Dairy System.

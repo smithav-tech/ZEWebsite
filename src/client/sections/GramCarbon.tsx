@@ -10,7 +10,7 @@ export function GramCarbon() {
       id="gramcarbon"
       kicker={<GramCarbonLogo className="gc-logo--kicker" />}
       doodle="gramcarbon"
-      doodleLabel="A map pin, a bar chart and a shield with a tick: trace, measure, verify"
+      doodleLabel="A magnifying glass over a milk drop, a gauge and a tick: trace, measure, verify"
     >
       <h2 className="display">
         Trace.

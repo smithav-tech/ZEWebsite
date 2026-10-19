@@ -538,20 +538,20 @@ button {
   right: var(--gutter);
   bottom: var(--hero-art-gap);
   width: var(--hero-art-w);
-  aspect-ratio: 1370 / 856;
+  aspect-ratio: 709 / 400;
   z-index: 0;
 }
 /* desktop: the cow sits beside the copy, centred in the space right of it,
    rather than down in the bottom corner under an empty band */
 @media (min-width: 861px) {
   .hero {
-    --hero-art-w: min(clamp(300px, 34vw, 540px), 62vh);
+    --hero-art-w: min(clamp(320px, 40vw, 640px), 80vh);
   }
   .hero-art {
     top: 50%;
     bottom: auto;
-    /* half the drawing's height (856 / 1370 of its width) */
-    margin-top: calc(var(--hero-art-w) * -0.3124);
+    /* half the drawing's height (400 / 709 of its width) */
+    margin-top: calc(var(--hero-art-w) * -0.2821);
   }
 }
 /* laptops: the drawing steps a little further out to give the copy some air */
@@ -674,7 +674,8 @@ button {
   grid-column: 2;
   grid-row: 3 / span 8;
   width: 100%;
-  aspect-ratio: 6 / 5;
+  /* the drawing's own proportions (Scene sets --ar), so it fills its box */
+  aspect-ratio: var(--ar, 6 / 5);
   max-height: 62vh;
   margin-top: clamp(0.75rem, 2vh, 1.5rem);
 }
@@ -707,6 +708,9 @@ button {
     grid-row: 1;
     align-self: center;
     margin-top: 0;
+    /* a little bigger: out into half the column gap and most of the right gutter */
+    width: calc(100% + clamp(2rem, 5vw, 5rem) * 0.5 + var(--gutter) * 0.7);
+    margin-left: calc(clamp(2rem, 5vw, 5rem) * -0.5);
   }
 }
 /* a chapter's key items: tinted icon badges with labels, split by hairlines */

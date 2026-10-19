@@ -25,9 +25,11 @@ import type { InkScene } from "./types";
  *   the brand gradient; over a gradient letter it stays black.
  * - Progress: one number, the length of line drawn, laid end to end across the
  *   pieces. A link is drawn down to the drawing head (72% down the viewport),
- *   so it writes through each headline as the head passes it; a scene is
- *   drawn as the head moves down its box. The hero cow draws itself once the
- *   page opens (pointer travel or the first quarter-screen of scroll can
+ *   so it writes through each headline as the head passes it, and runs on into
+ *   the next drawing as soon as that drawing's section starts to come into
+ *   view; the drawing then plays straight through on its own, and it
+ *   starts over when you scroll back above its section. The hero cow draws itself once
+ *   the page opens (pointer travel or the first quarter-screen of scroll can
  *   finish it sooner).
  * - Drawing: the shown length eases toward that target each frame, and each
  *   path reveals its share through stroke-dashoffset. Labels fade in at their
@@ -44,6 +46,10 @@ const POINTER_TRAVEL = 2200;
 const HERO_SCROLL = 0.25;
 /** the hero cow draws itself over this long (s) once the page opens */
 const SELF_DRAW = 2.2;
+/** every other drawing plays through over this long (s) once the line reaches it */
+const PLAY = 2.4;
+/** a drawing starts as soon as its section's top comes up past this fraction of the screen */
+const ENTER = 0.9;
 /**
  * One stroke weight for the whole line, in every scene and link: a little
  * heavier than the stem of the body text (DM Sans stems are 0.085em), so it
@@ -52,8 +58,6 @@ const SELF_DRAW = 2.2;
 const STROKE_EM = 0.11;
 const STROKE_MIN = 1.75;
 const STROKE_MAX = 3;
-/** a scene is complete once the head has passed this fraction of its box */
-const DEFAULT_SPAN = 0.85;
 /** the big headlines the line threads through, and whose glyphs it shows over */
 const HEADLINES = ".hero-title, .display";
 /** what the links keep clear of: copy, buttons, cards, photos */
@@ -99,7 +103,6 @@ interface Placed {
   end: Point;
   interactive: boolean;
   glow: boolean;
-  span: number;
 }
 
 interface Stroke {
@@ -394,7 +397,6 @@ export function InkLine() {
           end: map(+last[1], +last[2]),
           interactive: box.dataset.interactive === "1",
           glow: box.dataset.glow === "1",
-          span: +(box.dataset.span || DEFAULT_SPAN),
         };
       });
 
@@ -548,12 +550,36 @@ export function InkLine() {
     }
 
     /* ── progress: how much line the page position asks for ───────────────── */
+    /** how far each drawing has played (0..1), by its box; kept across layouts */
+    const plays = new Map<HTMLElement, { f: number; on: boolean }>();
+    const playOf = (box: HTMLElement) => {
+      let p = plays.get(box);
+      if (!p) plays.set(box, (p = { f: 0, on: false }));
+      return p;
+    };
+    /** a drawing's section has started to come into view (its top is above ENTER of the screen) */
+    const entered = (box: HTMLElement) =>
+      (box.closest("section") ?? box).getBoundingClientRect().top <= window.innerHeight * ENTER;
     function target() {
       const head = window.scrollY + window.innerHeight * HEAD;
-      let length = 0;
+      // scrolled back above a drawing: it plays again from the start next time
       for (const piece of line.pieces) {
+        if (piece.kind !== "scene" || piece.placed.interactive) continue;
+        const p = playOf(piece.placed.box);
+        if (p.on && !entered(piece.placed.box)) {
+          gsap.killTweensOf(p);
+          p.f = 0;
+          p.on = false;
+        }
+      }
+      let length = 0;
+      for (const [i, piece] of line.pieces.entries()) {
         let f: number;
-        if (piece.kind === "link") {
+        const next = line.pieces[i + 1];
+        if (piece.kind === "link" && next?.kind === "scene" && entered(next.placed.box)) {
+          // the drawing's section has come into view: the link runs on into it at once
+          f = 1;
+        } else if (piece.kind === "link") {
           // drawn down to the head: the first point where the line goes below it
           const { reach } = piece;
           let lo = 0;
@@ -575,8 +601,13 @@ export function InkLine() {
           if (window.scrollY > 40) line.away = true;
           f = Math.max(window.scrollY / (window.innerHeight * HERO_SCROLL), line.pointer);
         } else {
-          const r = piece.placed.box.getBoundingClientRect();
-          f = (head - (r.top + window.scrollY)) / (r.height * piece.placed.span);
+          // the line has reached the drawing: it plays straight through
+          const p = playOf(piece.placed.box);
+          if (!p.on) {
+            p.on = true;
+            gsap.to(p, { f: 1, duration: PLAY, ease: "power1.inOut", onUpdate: requestDraw });
+          }
+          f = p.f;
         }
         f = Math.max(0, Math.min(1, f));
         length += piece.length * f;

@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Doodle } from "../ink/Doodle";
-import type { SceneName } from "../ink/scenes";
+import { SCENES, type SceneName } from "../ink/scenes";
 
 interface SceneProps {
   id: string;
@@ -25,7 +25,7 @@ export function Scene({ id, kicker, doodle, doodleLabel, glow, children }: Scene
           {kicker ? <p className="kicker">{kicker}</p> : null}
           {children}
         </div>
-        <div className="scene-art">
+        <div className="scene-art" style={{ "--ar": `${SCENES[doodle].w} / ${SCENES[doodle].h}` } as CSSProperties}>
           <Doodle scene={doodle} label={doodleLabel} glow={glow} />
         </div>
       </div>

@@ -1,7 +1,6 @@
 import "./client.css";
 import "./fx/type3d.css";
 import { Nav } from "./components/Nav";
-import { Depth } from "./depth/Depth";
 import { HeadingFx } from "./fx/HeadingFx";
 import { TiltFx } from "./fx/Tilt";
 import { InkLine } from "./ink/InkLine";
@@ -31,7 +30,6 @@ export function ClientSite() {
       <TiltFx />
       <HeadingFx />
       <div className="page">
-        <Depth />
         <InkLine />
         <main id="main">
           <Hero />

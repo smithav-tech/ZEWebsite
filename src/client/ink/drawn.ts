@@ -1,8 +1,7 @@
 /**
- * The original hand drawings of the carbon value coin and the wordmark,
- * smoothed: the hand-drawn jitter is filtered out of each line, so it keeps
- * their shapes and reads clean at the thread's weight. The coin opens with a
- * straight lead-in from the top-right corner: down, a rounded turn, across (`lead: 3`).
+ * The original hand drawing of the wordmark, smoothed: the hand-drawn jitter
+ * is filtered out of the line, so it keeps its shapes and reads clean at the
+ * thread's weight.
  */
 
 export const WORDMARK =
