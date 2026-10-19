@@ -3,8 +3,6 @@ import "./client.css";
 import "./fx/type3d.css";
 import { HomeIcon } from "./components/Icons";
 import { Nav } from "./components/Nav";
-import { HeadingFx } from "./fx/HeadingFx";
-import { TiltFx } from "./fx/Tilt";
 import { MilkBackground } from "./milk/MilkBackground";
 import { pageLink } from "./router";
 import { restoreScroll } from "./scrollMemory";
@@ -26,8 +24,6 @@ function SubPage({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <Nav />
-      <TiltFx />
-      <HeadingFx />
       <div className="page">
         <main id="main" className="team-page">
           {children}

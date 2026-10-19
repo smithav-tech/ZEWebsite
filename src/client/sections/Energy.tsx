@@ -28,8 +28,20 @@ export function Energy() {
       <Features
         label="Energy outputs"
         items={[
-          { label: "CBG", icon: <FlameIcon />, tint: "lime" },
-          { label: "Bio LNG", icon: <TankIcon />, tint: "teal" },
+          {
+            label: "CBG",
+            icon: <FlameIcon />,
+            tint: "lime",
+            href: "https://mopng.gov.in/en/refining/compressed-bio-gas",
+            source: "Ministry of Petroleum and Natural Gas: Compressed Bio Gas (SATAT)",
+          },
+          {
+            label: "Bio LNG",
+            icon: <TankIcon />,
+            tint: "teal",
+            href: "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2295480&reg=48&lang=1",
+            source: "PIB, Government of India: GOBARdhan, the national scheme for compressed biogas",
+          },
         ]}
       />
     </Scene>

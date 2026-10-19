@@ -436,36 +436,6 @@ export function pathData(points: Waypoint[], straightWay = false) {
   return d;
 }
 
-/**
- * How far down the page the line has reached at every `step` px along it:
- * entry i is the lowest y within the first i * step px. Sampled from the
- * curves themselves, without asking the DOM.
- */
-export function reachTable(points: Waypoint[], step: number, straightWay = false): Float32Array {
-  const out: number[] = [points[0].p[1]];
-  let prev = points[0].p;
-  let lowest = prev[1];
-  let length = 0;
-  let next = step;
-  for (const c of points.slice(1).flatMap((b, i) => segments(points[i], b, straightWay))) {
-    const n = Math.max(8, Math.ceil(Math.hypot(c[3][0] - c[0][0], c[3][1] - c[0][1]) / 2));
-    for (let k = 1; k <= n; k++) {
-      const q = bezier(c, k / n);
-      const run = Math.hypot(q[0] - prev[0], q[1] - prev[1]);
-      while (run > 0 && length + run >= next) {
-        lowest = Math.max(lowest, prev[1] + ((q[1] - prev[1]) * (next - length)) / run);
-        out.push(lowest);
-        next += step;
-      }
-      lowest = Math.max(lowest, q[1]);
-      length += run;
-      prev = q;
-    }
-  }
-  out.push(lowest);
-  return Float32Array.from(out);
-}
-
 /** points along absolute M + C path data, about every `step` px */
 export function samplePath(d: string, step = 6): Vec[] {
   const nums = (d.match(/-?\d*\.?\d+/g) ?? []).map(Number);

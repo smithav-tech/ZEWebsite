@@ -54,23 +54,27 @@ export interface Advisor {
   photo: string;
   name: string;
   affiliation: string;
+  bio: string;
 }
 
 export const advisors: Advisor[] = [
   {
     photo: `${MEDIA}/advisors/gert-van-duinkerken.webp`,
-    name: "Gert van Duinkerken",
-    affiliation: "Wageningen Livestock Research",
+    name: "Dr. Gert van Duinkerken",
+    affiliation: "Director, Wageningen Livestock Research",
+    bio: "Dr. Gert van Duinkerken is an expert in animal nutrition and livestock farming, with extensive experience in agricultural research. He serves as Director of Wageningen Livestock Research at Wageningen University & Research in the Netherlands. His work focuses on sustainable livestock production, animal nutrition, and improving farming practices. He is committed to advancing climate-friendly agriculture while balancing environmental sustainability and livestock productivity.",
   },
   {
     photo: `${MEDIA}/advisors/veerasamy-sejian.webp`,
-    name: "Veerasamy Sejian",
-    affiliation: "Principal Scientist, climate-resilient livestock",
+    name: "Dr. Sejian Veerasamy",
+    affiliation: "Principal Scientist, ICAR–NIANP, Bengaluru",
+    bio: "Dr. Sejian Veerasamy is a Principal Scientist at ICAR–National Institute of Animal Nutrition and Physiology (NIANP), Bengaluru, India. His research focuses on climate change impacts on livestock, animal physiology, and environmental stress adaptation. He works on developing climate-resilient sheep and goat breeds that can withstand heat stress and changing environmental conditions. His work contributes to sustainable livestock production and strategies to reduce greenhouse gas emissions from agriculture.",
   },
   {
     photo: `${MEDIA}/advisors/trevor-tomkins.webp`,
-    name: "Trevor Tomkins",
-    affiliation: "Former CEO, Milk Specialties Global; Akshayakalpa",
+    name: "Dr. Trevor Tomkins",
+    affiliation: "President & Founder, venture | dairy",
+    bio: "Dr. Trevor Tomkins is an experienced expert in dairy science, animal nutrition, and the global dairy industry. He is the President and Founder of venture | dairy, supporting dairy-sector development and business growth. He has held senior leadership roles, including President of Milk Specialties Company, and has extensive international experience in dairy production and processing. His work focuses on sustainable dairy development, improving milk quality, strengthening dairy value chains, and supporting rural prosperity.",
   },
 ];
 

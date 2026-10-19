@@ -211,11 +211,11 @@ export function Team() {
         <p className="body team-intro">
           A women-led team with 25+ years of cumulative experience in the climate sector.
         </p>
-        {/* everyone at once: each cell flies in (tilt.css), the card inside it tilts */}
+        {/* everyone at once */}
         <ul className="leaders" aria-label="Leadership team">
           {team.map((person, i) => (
             <li className="leader-cell" key={person.name}>
-              <article className="leader" data-tilt="">
+              <article className="leader">
                 <Portrait photo={person.photo} name={person.name} index={i} cutout={false} />
                 <h3>{person.name}</h3>
                 <p className="role">{person.role}</p>
@@ -234,7 +234,7 @@ export function Team() {
             {advisors.map((advisor) => {
               const [w, h] = sizeOf(advisor.photo) ?? [];
               return (
-                <li key={advisor.name} data-tilt="">
+                <li key={advisor.name}>
                   <div className="advisor-photo">
                     <img
                       src={advisor.photo}
@@ -246,7 +246,8 @@ export function Team() {
                     />
                   </div>
                   <h3>{advisor.name}</h3>
-                  <p>{advisor.affiliation}</p>
+                  <p className="advisor-role">{advisor.affiliation}</p>
+                  <p className="advisor-bio">{advisor.bio}</p>
                 </li>
               );
             })}

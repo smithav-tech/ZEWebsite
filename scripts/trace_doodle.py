@@ -1,6 +1,6 @@
 """Trace a one-line doodle image into a single continuous SVG path (M + C only).
 
-usage: python scripts/trace_doodle.py design/doodles/3-feed.png out/feed [--entry left|top|bottom|right] [--exit bottom|right|left]
+usage: python scripts/trace_doodle.py design/doodles/3-feed.png out/feed [--entry left|top|bottom|right] [--exit bottom|right|left] [--eps 1.5] [--work 2048] [--smooth 2] [--gap 60]
 writes out_prefix.json ({w, h, d, start, end, stats}) and out_prefix.png (preview)
 """
 import heapq
@@ -12,16 +12,16 @@ from collections import defaultdict
 import numpy as np
 from PIL import Image, ImageDraw
 
-WORK_W = 1024  # trace at this width
+WORK_W = 1024  # trace at this width (--work); coordinates always come out at this width
 
 
-def load(path):
+def load(path, work=WORK_W):
     im = Image.open(path).convert("RGBA")
     bg = Image.new("RGBA", im.size, "white")
     bg.alpha_composite(im)
     g = bg.convert("L")
-    if g.width != WORK_W:
-        g = g.resize((WORK_W, round(g.height * WORK_W / g.width)), Image.LANCZOS)
+    if g.width != work:
+        g = g.resize((work, round(g.height * work / g.width)), Image.LANCZOS)
     return np.asarray(g, dtype=np.uint8)
 
 
@@ -432,7 +432,11 @@ def main():
     entry = opts.get("--entry", "left")
     exit_ = opts.get("--exit", "bottom")
     eps = float(opts.get("--eps", "0.9"))
-    g = load(src)
+    work = int(opts.get("--work", WORK_W))
+    k = int(opts.get("--smooth", "4"))
+    # fine detail (hand lettering) traces at a higher resolution, then scales back
+    s = WORK_W / work
+    g = load(src, work)
     h, w = g.shape
     mask = g < 150
     # drop specks (and the faint corner mark)
@@ -446,7 +450,7 @@ def main():
                 keepmask[y, x] = True
         else:
             small.append(len(c))
-    keepmask = bridge(keepmask)
+    keepmask = bridge(keepmask, int(opts.get("--gap", "60")))
     skel = zhang_suen(keepmask.astype(np.uint8))
     nodes, edges = build_graph(skel)
     edges = [e for e in edges if len(e[2]) >= 2]
@@ -464,7 +468,7 @@ def main():
     d_segs = []
     first = None
     for pts in seq:
-        sp = rdp(smooth(pts), eps)
+        sp = rdp(smooth(pts, k), eps)
         if first is None:
             first = sp[0]
         d_segs.extend(to_cubics(sp))
@@ -476,8 +480,8 @@ def main():
     x0, y0 = max(0, min(xs) - m), max(0, min(ys) - m)
     x1, y1 = min(w, max(xs) + m), min(h, max(ys) + m)
     # ends that touch the image edge stay on the scene's edge
-    f = lambda p: (round(p[0] - x0, 1), round(p[1] - y0, 1))
-    W, H = round(x1 - x0), round(y1 - y0)
+    f = lambda p: (round((p[0] - x0) * s, 1), round((p[1] - y0) * s, 1))
+    W, H = round((x1 - x0) * s), round((y1 - y0) * s)
     fx, fy = f(first)
     parts = [f"M{fx},{fy}"]
     for c1, c2, p in d_segs:

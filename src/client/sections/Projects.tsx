@@ -39,11 +39,11 @@ export function Projects() {
         <p className="body projects-intro">
           Field trials, farmer partnerships and commercial pilots deploying clean dairy across India.
         </p>
-        {/* every project at once: each cell flies in (tilt.css), the card inside it tilts */}
+        {/* every project at once */}
         <ul className="leaders" aria-label="Projects">
           {projects.map((item, i) => (
             <li className="leader-cell" key={item.name}>
-              <article className="leader project-card" data-tilt="">
+              <article className="leader project-card">
                 <Portrait photo={item.photo} name={item.name} index={i} cutout={item.cutout ?? false} />
                 <h3>{item.name}</h3>
                 <p className="role">{item.role}</p>

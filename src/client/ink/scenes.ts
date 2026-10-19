@@ -22,14 +22,14 @@ import { CORRIDOR, ENERGY, FEED, GRAMCARBON, HERO, METHANE, OFFSETS } from "./tr
 export const SCENES = {
   // hero: drawn by the pointer or the first quarter-screen of scroll
   cow: HERO,
-  // CH4OW: the methane curls away from her muzzle and back down, "CH4 LESS"
+  // CH4OW: she burps a string of round methane bubbles, "CH4" in the big ones, "LESS"
   methane: {
     ...METHANE,
     labels: [
-      { x: 822, y: 92, text: "CH₄", size: 34, at: 0.55, weight: 500 },
-      { x: 818, y: 262, text: "CH₄", size: 26, at: 0.65, weight: 500 },
-      { x: 814, y: 418, text: "CH₄", size: 20, at: 0.75, weight: 500 },
-      { x: 812, y: 600, text: "LESS", size: 24, at: 0.88, weight: 500, deco: "underline" },
+      { x: 676, y: 354, text: "CH₄", size: 26, at: 0.55, weight: 500 },
+      { x: 785, y: 234, text: "CH₄", size: 34, at: 0.65, weight: 500 },
+      { x: 771, y: 434, text: "CH₄", size: 34, at: 0.75, weight: 500 },
+      { x: 790, y: 545, text: "LESS", size: 24, at: 0.88, weight: 500, deco: "underline" },
     ],
   },
   // feed and TMR: fodder grass, a bowl of TMR, a tractor hauling bales
@@ -38,9 +38,9 @@ export const SCENES = {
   energy: ENERGY,
   // the corridor: cow, feed, tractor, milk, biogas and data on one road
   corridor: CORRIDOR,
-  // gramCarbon: trace, measure, verify
+  // gramCarbon: the line writes the wordmark, the logo's three petals for its r
   gramcarbon: GRAMCARBON,
-  // carbon value: coins sprouting a seedling, emissions down, a credit certificate
+  // carbon value: the ZE SITA coin
   offsets: OFFSETS,
   // partners: the line writes the zeroearth wordmark, then hands over to the logo
   finale: {

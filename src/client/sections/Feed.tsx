@@ -23,9 +23,27 @@ export function Feed() {
       <Features
         label="Focus areas"
         items={[
-          { label: "TMR", icon: <BowlIcon />, tint: "lime" },
-          { label: "Fodder Stress", icon: <GrassIcon />, tint: "teal" },
-          { label: "Animal Productivity", icon: <DropIcon />, tint: "purple" },
+          {
+            label: "TMR",
+            icon: <BowlIcon />,
+            tint: "lime",
+            href: "https://nddb.coop/services/animalnutrition/crop-residue-management/total-mixed-ration-dry",
+            source: "NDDB: Total Mixed Ration",
+          },
+          {
+            label: "Fodder Stress",
+            icon: <GrassIcon />,
+            tint: "teal",
+            href: "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2119477",
+            source: "PIB, Government of India: the national green fodder deficit and ICAR-IGFRI's fodder solutions",
+          },
+          {
+            label: "Animal Productivity",
+            icon: <DropIcon />,
+            tint: "purple",
+            href: "https://www.nddb.coop/services/animalnutrition/programmes/ration-balancing-programme",
+            source: "NDDB: Ration Balancing Programme, more milk from balanced feeding",
+          },
         ]}
       />
     </Scene>

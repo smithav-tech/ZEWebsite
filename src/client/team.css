@@ -425,11 +425,6 @@
   border-radius: 0;
   object-fit: contain;
   object-position: 50% 100%;
-  filter: grayscale(1) contrast(1.05);
-  transition: filter 0.4s ease;
-}
-.advisors-band .advisors li:hover .advisor-photo img {
-  filter: none;
 }
 .advisors-band .advisors h3 {
   margin: 22px 8px 0;
@@ -446,6 +441,15 @@
   font-size: 17.5px;
   line-height: 1.5;
   color: var(--body);
+}
+.advisors-band .advisors li p.advisor-role {
+  font-weight: 600;
+  color: var(--ink);
+}
+.advisors-band .advisors li p.advisor-bio {
+  margin-top: 14px;
+  font-size: 15.5px;
+  line-height: 1.6;
 }
 @media (max-width: 640px) {
   .advisors-band {

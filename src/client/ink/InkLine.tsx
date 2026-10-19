@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { brand } from "../content";
 import { whenRevealed } from "../reveal";
-import { pathData, reachTable, route, samplePath, type Box, type Headline, type Letter } from "./route";
+import { pathData, route, samplePath, type Box, type Headline, type Letter } from "./route";
 import { SCENES, type SceneName } from "./scenes";
 import { heroStitch } from "./stitch";
 import type { InkScene } from "./types";
@@ -24,13 +24,12 @@ import type { InkScene } from "./types";
  *   the headline glyphs. Where the line crosses a dark letter it turns into
  *   the brand gradient; over a gradient letter it stays black.
  * - Progress: one number, the length of line drawn, laid end to end across the
- *   pieces. A link is drawn down to the drawing head (72% down the viewport),
- *   so it writes through each headline as the head passes it, and runs on into
- *   the next drawing as soon as that drawing's section starts to come into
- *   view; the drawing then plays straight through on its own, and it
- *   starts over when you scroll back above its section. The hero cow draws itself once
- *   the page opens (pointer travel or the first quarter-screen of scroll can
- *   finish it sooner).
+ *   pieces. Each drawing plays straight through on its own as soon as its
+ *   section starts to come into view (and starts over when you scroll back
+ *   above it); once it is done, the link runs on to the next drawing and
+ *   waits there. A drawing scrolled right past counts as done. The hero cow
+ *   draws itself once the page opens (pointer travel or the first
+ *   quarter-screen of scroll can finish it sooner).
  * - Drawing: the shown length eases toward that target each frame, and each
  *   path reveals its share through stroke-dashoffset. Labels fade in at their
  *   fraction of the stroke; the last scene can glow; the finale swaps the
@@ -38,7 +37,7 @@ import type { InkScene } from "./types";
  * Reduced motion: everything is drawn at once and the pointer is ignored.
  */
 
-/** the drawing head, as a fraction of the viewport height */
+/** a drawing scrolled above this fraction of the viewport height counts as done */
 const HEAD = 0.72;
 /** pointer travel (px) that draws the whole hero cow */
 const POINTER_TRAVEL = 2200;
@@ -117,11 +116,7 @@ interface Stroke {
   drawn: number;
 }
 
-/** a link: `reach[i]` is the lowest page y the line gets to within its first i * REACH_STEP px */
-type Piece = Stroke & ({ kind: "link"; reach: Float32Array } | { kind: "scene"; placed: Placed });
-
-/** sampling step (px of line) for a link's reach table */
-const REACH_STEP = 6;
+type Piece = Stroke & ({ kind: "link" } | { kind: "scene"; placed: Placed });
 
 interface Reveal {
   el: SVGElement;
@@ -253,7 +248,8 @@ function readObstacles(pageBox: DOMRect, width: number, pad: number): Box[] {
   const boxes: Box[] = [];
   const range = document.createRange();
   const add = (el: HTMLElement, soft: boolean) => {
-    if (el.closest(HEADLINES) || el.closest(".doodle-box")) return;
+    // a drawing's hover card sits over the drawing only while it is shown
+    if (el.closest(HEADLINES) || el.closest(".doodle-box, .scene-tip")) return;
     let rects: DOMRect[];
     const style = getComputedStyle(el);
     const boxed = style.borderTopWidth !== "0px" || style.backgroundColor !== "rgba(0, 0, 0, 0)";
@@ -354,7 +350,6 @@ export function InkLine() {
     /* ── layout: measure the boxes and rebuild every path ─────────────────── */
     function layout() {
       const pageBox = page.getBoundingClientRect();
-      const pageTop = pageBox.top + window.scrollY;
       // the page's own box: its scroll size would include these SVGs, which
       // would then never shrink when the window does
       const width = page.clientWidth;
@@ -451,10 +446,8 @@ export function InkLine() {
           const previous = placed[i - 1];
           // straight runs with rounded corners, not sweeping curves
           const way = route(previous.end, p.start, [], { obstacles: [...obstacles, ...headlineLines], width, straight: true }, p.startDir);
-          // how far down the page the line has reached at each point along it
-          const reach = reachTable(way, REACH_STEP, true).map((y) => y + pageTop);
           const link = addStroke(pathData(way, true), false);
-          pieces.push({ kind: "link", reach, ...link });
+          pieces.push({ kind: "link", ...link });
         }
         // the hero: the line begins as the tail of the title's last letter and
         // runs through its full stop into the drawing
@@ -573,23 +566,12 @@ export function InkLine() {
         }
       }
       let length = 0;
-      for (const [i, piece] of line.pieces.entries()) {
+      for (const piece of line.pieces) {
         let f: number;
-        const next = line.pieces[i + 1];
-        if (piece.kind === "link" && next?.kind === "scene" && entered(next.placed.box)) {
-          // the drawing's section has come into view: the link runs on into it at once
+        if (piece.kind === "link") {
+          // once the drawing above is done, the line runs on to the next one
+          // and waits there, rather than stopping part way down the screen
           f = 1;
-        } else if (piece.kind === "link") {
-          // drawn down to the head: the first point where the line goes below it
-          const { reach } = piece;
-          let lo = 0;
-          let hi = reach.length;
-          while (lo < hi) {
-            const mid = (lo + hi) >> 1;
-            if (reach[mid] > head) hi = mid;
-            else lo = mid + 1;
-          }
-          f = lo >= reach.length ? 1 : (lo * REACH_STEP) / piece.length;
         } else if (piece.placed.interactive) {
           // back at the very top after scrolling away: the cow starts over
           if (window.scrollY <= 2 && line.away) {
@@ -601,11 +583,16 @@ export function InkLine() {
           if (window.scrollY > 40) line.away = true;
           f = Math.max(window.scrollY / (window.innerHeight * HERO_SCROLL), line.pointer);
         } else {
-          // the line has reached the drawing: it plays straight through
+          // the line has reached the drawing and its section is in view: it plays straight through
           const p = playOf(piece.placed.box);
-          if (!p.on) {
+          if (!p.on && entered(piece.placed.box)) {
             p.on = true;
             gsap.to(p, { f: 1, duration: PLAY, ease: "power1.inOut", onUpdate: requestDraw });
+          }
+          // scrolled on past it (a jump down the page): it is done, so the line runs on
+          if (p.f < 1 && piece.placed.box.getBoundingClientRect().bottom + window.scrollY < head) {
+            gsap.killTweensOf(p);
+            p.f = 1;
           }
           f = p.f;
         }

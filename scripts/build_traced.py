@@ -20,14 +20,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
 # key, const, image, entry, exit, crop (x0, y0, x1, y1 in the trace's own units), description
+# and, for fine detail, extra tracer options (a higher resolution, lighter smoothing)
+FINE = ["--eps", "0.9", "--work", "2048", "--smooth", "3"]
+
 SCENES = [
     ("cow", "HERO", "1-hero-cow-calf", "left", "bottom", (120, 0, 829, 400), "the hero: a dairy cow nursing her calf"),
-    ("methane", "METHANE", "2-methane", "left", "bottom", (90, 0, 961, 690), "CH4OW: a contented cow, her methane curling away in loops"),
+    ("methane", "METHANE", "2-methane", "left", "bottom", (110, 0, 1014, 830), "CH4OW: a contented cow burping a string of round methane bubbles",
+     [*FINE, "--gap", "160"]),
     ("feed", "FEED", "3-feed", "left", "bottom", (60, 0, 1024, 500), "feed and TMR: fodder grass, a bowl of TMR, a tractor hauling bales"),
     ("energy", "ENERGY", "4-energy", "left", "bottom", (90, 0, 923, 560), "green energy: fodder, cow, manure, biogas plant and CBG, fertiliser, round again"),
     ("corridor", "CORRIDOR", "5-corridor", "left", "right", (40, 0, 1024, 670), "the corridor: cow, feed, tractor, milk, biogas and data on one road"),
-    ("gramcarbon", "GRAMCARBON", "6-gramcarbon", "left", "bottom", (100, 0, 960, 430), "gramCarbon: trace (a lens on a milk drop), measure (a gauge), verify (a tick)"),
-    ("offsets", "OFFSETS", "7-carbon-value", "left", "bottom", (60, 0, 960, 380), "carbon value: coins sprouting a seedling, emissions down, a credit certificate"),
+    ("gramcarbon", "GRAMCARBON", "6-gramcarbon", "left", "bottom", (140, 0, 953, 230), "gramCarbon: the line writes the wordmark, the logo's three petals for its r", FINE),
+    ("offsets", "OFFSETS", "7-carbon-value", "left", "bottom", (150, 0, 869, 740), "carbon value: the ZE SITA coin, a front-facing tagged cow's head inside two rims", FINE),
 ]
 
 NUM = r"-?\d+(?:\.\d+)?"
@@ -74,11 +78,12 @@ def main():
         "",
     ]
     tmp = tempfile.mkdtemp()
-    for key, const, image, entry, exit_, crop, desc in SCENES:
+    for key, const, image, entry, exit_, crop, desc, *extra in SCENES:
+        opts = extra[0] if extra else ["--eps", "1.5"]
         prefix = os.path.join(tmp, key)
         subprocess.run(
             [sys.executable, os.path.join(HERE, "trace_doodle.py"), os.path.join(ROOT, "design", "doodles", image + ".png"), prefix,
-             "--entry", entry, "--exit", exit_, "--eps", "1.5"],
+             "--entry", entry, "--exit", exit_, *opts],
             check=True, capture_output=True,
         )
         j = json.load(open(prefix + ".json"))

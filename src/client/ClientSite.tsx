@@ -1,8 +1,6 @@
 import "./client.css";
 import "./fx/type3d.css";
 import { Nav } from "./components/Nav";
-import { HeadingFx } from "./fx/HeadingFx";
-import { TiltFx } from "./fx/Tilt";
 import { InkLine } from "./ink/InkLine";
 import { MilkBackground } from "./milk/MilkBackground";
 import { CarbonValue } from "./sections/CarbonValue";
@@ -27,8 +25,6 @@ export function ClientSite() {
         Skip to content
       </a>
       <Nav />
-      <TiltFx />
-      <HeadingFx />
       <div className="page">
         <InkLine />
         <main id="main">

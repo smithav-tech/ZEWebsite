@@ -13,7 +13,7 @@ export function Methane() {
         </span>
       }
       doodle="methane"
-      doodleLabel="A one-line drawing of a contented cow, her methane curling away in loops and back down: less methane"
+      doodleLabel="A one-line drawing of a contented cow burping a string of round bubbles of methane: less methane"
     >
       <h2 className="display">
         <span className="grad">23%</span> Less Methane.
