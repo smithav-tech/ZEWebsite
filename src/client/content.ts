@@ -138,7 +138,7 @@ export interface Partner {
 
 export const partners: Partner[] = [
   { logo: `${MEDIA}/partners/icar.webp`, name: "ICAR", w: 289, h: 359 },
-  { logo: `${MEDIA}/partners/gates-foundation.svg`, name: "Gates Foundation", w: 360, h: 90 },
+  { logo: `${MEDIA}/partners/bill-melinda-gates-foundation.svg`, name: "Bill & Melinda Gates Foundation", w: 360, h: 76 },
   { logo: `${MEDIA}/partners/grand-challenges-india.webp`, name: "Grand Challenges India", w: 299, h: 203 },
   { logo: `${MEDIA}/partners/birac.webp`, name: "BIRAC", w: 360, h: 203 },
   { logo: `${MEDIA}/partners/cgiar.svg`, name: "CGIAR", w: 220, h: 257 },

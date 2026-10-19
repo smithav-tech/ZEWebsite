@@ -1,28 +1,150 @@
-/* The zeroearth.company loader: petals bloom, the count runs to 100, a single
-   milk drop falls and the page opens from its ripple. */
-@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 300 700; font-display: block; src: url("/media/client/fonts/fraunces.woff2") format("woff2"); }
-@font-face { font-family: "Manrope"; font-style: normal; font-weight: 200 800; font-display: block; src: url("/media/client/fonts/manrope.woff2") format("woff2"); }
+/* The zeroearth.company loader: petals bloom inside a ring that fills as the
+   count runs to 100, over the wordmark and tagline; then a single milk drop
+   falls and the page opens from its ripple. Set in the site's own type. */
 
 .loader {
-  --paper: #fffdf3;
-  --l-ink: #10221e;
-  --l-muted: #5d6b66;
+  --paper: #fffaf6;
+  --l-ink: #173c3b;
+  --l-muted: #6f7f7c;
   --hole: 0px;
-  position: fixed; inset: 0; z-index: 100;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
   touch-action: none;
+  /* milk, with the brand's lime and teal glowing softly through it */
+  background:
+    radial-gradient(42vmax 34vmax at 12% 8%, rgba(166, 207, 114, 0.2), transparent 70%),
+    radial-gradient(46vmax 38vmax at 92% 96%, rgba(76, 191, 190, 0.18), transparent 70%),
+    radial-gradient(30vmax 26vmax at 50% 46%, #ffffff, transparent 75%),
+    var(--paper);
   -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 2px));
   mask-image: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 2px));
 }
-.loader__curtain { position: absolute; inset: 0; width: 100%; height: 100%; fill: var(--paper); }
-.loader__mark { position: absolute; left: 50%; top: 50%; width: clamp(110px, 14vw, 170px); transform: translate(-50%, -50%); }
-.loader__mark svg { display: block; width: 100%; overflow: visible; }
-.loader .petal { mix-blend-mode: multiply; transform-box: fill-box; }
-.loader .petal--teal { fill: #40bda8; }
-.loader .petal--purple { fill: #9a61a8; }
-.loader .petal--orange { fill: #f9ae2a; }
-.loader__caption { position: absolute; left: clamp(20px, 4vw, 56px); bottom: clamp(24px, 5vh, 48px); margin: 0; font: 600 13px/1 "Manrope", ui-sans-serif, system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--l-muted); }
-.loader__count { position: absolute; right: clamp(20px, 4vw, 56px); bottom: clamp(16px, 4vh, 36px); margin: 0; font: 300 clamp(64px, 10vw, 150px)/.8 "Fraunces", "Iowan Old Style", Georgia, serif; letter-spacing: -.05em; color: var(--l-ink); overflow: hidden; }
-.loader__drop { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 0 50% 50% 50%; rotate: 45deg; background: radial-gradient(circle at 60% 60%, #fff 0, #f4f7f2 55%, #dfe9e3 100%); box-shadow: 0 10px 22px -6px rgba(16,34,30,.35), inset -2px -3px 6px rgba(31,154,134,.18); opacity: 0; }
-.loader__ripple { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; border: 1.5px solid rgba(31,154,134,.55); opacity: 0; }
+
+/* the mark over the wordmark and tagline, centred as one group */
+.loader__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3.4vh, 30px);
+  padding: 0 20px;
+  text-align: center;
+}
+.loader__mark {
+  width: clamp(132px, 15vw, 188px);
+}
+.loader__mark svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.loader__ring circle {
+  fill: none;
+  stroke-width: 5;
+}
+.loader__ring-track {
+  stroke: rgba(23, 60, 59, 0.08);
+}
+.loader__ring-fill {
+  stroke: url(#loader-ring);
+  stroke-linecap: round;
+}
+.loader .petal {
+  mix-blend-mode: multiply;
+  transform-box: fill-box;
+}
+.loader .petal--teal {
+  fill: #40bda8;
+}
+.loader .petal--purple {
+  fill: #9a61a8;
+}
+.loader .petal--orange {
+  fill: #f9ae2a;
+}
+
+.loader__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.loader__logo {
+  display: block;
+  height: clamp(28px, 3.2vw, 38px);
+  width: auto;
+}
+.loader__tagline {
+  margin: 0;
+  font: 500 clamp(0.95rem, 1.25vw, 1.08rem) / 1.4 "Ubuntu", "Segoe UI", system-ui, sans-serif;
+  color: var(--l-ink);
+}
+
+/* along the foot: what it is, and how far along it is */
+.loader__caption,
+.loader__count {
+  position: absolute;
+  bottom: clamp(22px, 4.5vh, 44px);
+  margin: 0;
+  font: 500 12px/1 "JetBrains Mono", ui-monospace, Menlo, monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--l-muted);
+}
+.loader__caption {
+  left: clamp(20px, 4vw, 56px);
+}
+.loader__count {
+  right: clamp(20px, 4vw, 56px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.loader__count span {
+  color: var(--l-ink);
+}
+@media (max-width: 520px) {
+  .loader__caption {
+    display: none;
+  }
+  .loader__count {
+    right: 50%;
+    translate: 50% 0;
+  }
+}
+
+.loader__drop {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 0 50% 50% 50%;
+  rotate: 45deg;
+  background: radial-gradient(circle at 60% 60%, #fff 0, #f4f7f2 55%, #dfe9e3 100%);
+  box-shadow:
+    0 10px 22px -6px rgba(16, 34, 30, 0.35),
+    inset -2px -3px 6px rgba(31, 154, 134, 0.18);
+  opacity: 0;
+}
+.loader__ripple {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(31, 154, 134, 0.55);
+  opacity: 0;
+}
 /* nothing shows before the timeline sets it */
-.loader__mark, .loader__caption, .loader__count span { visibility: hidden; }
+.loader__mark,
+.loader__brand,
+.loader__caption,
+.loader__count {
+  visibility: hidden;
+}
