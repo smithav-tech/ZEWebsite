@@ -24,10 +24,10 @@ ROOT = os.path.dirname(HERE)
 FINE = ["--eps", "0.9", "--work", "2048", "--smooth", "3"]
 
 SCENES = [
-    ("cow", "HERO", "1-hero-cow-calf", "left", "bottom", (120, 0, 829, 400), "the hero: a dairy cow nursing her calf"),
+    ("cow", "HERO", "1-hero-cow-calf", "left", "bottom", (120, 0, 829, 400), "the hero: a dairy cow nursing her calf", FINE),
     ("methane", "METHANE", "2-methane", "left", "bottom", (110, 0, 1014, 830), "CH4OW: a contented cow burping a string of round methane bubbles",
      [*FINE, "--gap", "160"]),
-    ("feed", "FEED", "3-feed", "left", "bottom", (60, 0, 1024, 500), "feed and TMR: fodder grass, a bowl of TMR, a tractor hauling bales"),
+    ("feed", "FEED", "3-feed", "left", "bottom", (60, 0, 1024, 500), "feed and TMR: fodder grass, a bowl of TMR, a tractor hauling bales", FINE),
     ("energy", "ENERGY", "4-energy", "left", "bottom", (90, 0, 923, 560), "green energy: fodder, cow, manure, biogas plant and CBG, fertiliser, round again"),
     ("corridor", "CORRIDOR", "5-corridor", "left", "right", (40, 0, 1024, 670), "the corridor: cow, feed, tractor, milk, biogas and data on one road"),
     ("gramcarbon", "GRAMCARBON", "6-gramcarbon", "left", "bottom", (140, 0, 953, 230), "gramCarbon: the line writes the wordmark, the logo's three petals for its r", FINE),

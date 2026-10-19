@@ -444,8 +444,20 @@ export function InkLine() {
         if (i > 0) {
           // from the previous scene's end, through every headline in between, into this one's start
           const previous = placed[i - 1];
-          // straight runs with rounded corners, not sweeping curves
-          const way = route(previous.end, p.start, [], { obstacles: [...obstacles, ...headlineLines], width, straight: true }, p.startDir);
+          // straight runs with rounded corners, not sweeping curves; the run
+          // across goes above the drawing, down just clear of its left-most
+          // stroke (grass leaves reach past the start) and in along the
+          // ground, never sideways through the picture
+          const clear = Math.max(12, stroke * 4);
+          const left = Math.min(p.start[0], ...samplePath(p.d, 12).map((q) => q[0])) - clear;
+          const above: Point = [left, p.map(0, 0)[1] - clear];
+          const over = previous.end[1] < above[1] && p.start[1] > above[1];
+          const ctx = { obstacles: [...obstacles, ...headlineLines], width, straight: true };
+          const way = over ? route(previous.end, above, [], ctx) : route(previous.end, p.start, [], ctx, p.startDir);
+          if (over) {
+            const turn = Math.min(clear * 2, p.start[0] - left);
+            way.push({ p: [left, p.start[1] - turn], dir: [0, 1] }, { p: p.start, dir: [1, 0] });
+          }
           const link = addStroke(pathData(way, true), false);
           pieces.push({ kind: "link", ...link });
         }
