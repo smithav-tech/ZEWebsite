@@ -138,19 +138,21 @@ export interface Partner {
 
 export const partners: Partner[] = [
   { logo: `${MEDIA}/partners/icar.webp`, name: "ICAR", w: 289, h: 359 },
-  { logo: `${MEDIA}/partners/gates-foundation.webp`, name: "Bill & Melinda Gates Foundation", w: 360, h: 84 },
+  { logo: `${MEDIA}/partners/gates-foundation.svg`, name: "Gates Foundation", w: 360, h: 90 },
   { logo: `${MEDIA}/partners/grand-challenges-india.webp`, name: "Grand Challenges India", w: 299, h: 203 },
   { logo: `${MEDIA}/partners/birac.webp`, name: "BIRAC", w: 360, h: 203 },
-  { logo: `${MEDIA}/partners/cgiar.webp`, name: "CGIAR", w: 160, h: 185 },
+  { logo: `${MEDIA}/partners/cgiar.svg`, name: "CGIAR", w: 220, h: 257 },
   { logo: `${MEDIA}/partners/agrinnovate-india.webp`, name: "Agrinnovate India", w: 328, h: 290 },
-  { logo: `${MEDIA}/partners/naarm-a-idea.webp`, name: "NAARM a-IDEA", w: 340, h: 138 },
+  { logo: `${MEDIA}/partners/naarm-a-idea-hq.webp`, name: "NAARM a-IDEA", w: 599, h: 511 },
   { logo: `${MEDIA}/partners/t-hub.webp`, name: "T-Hub", w: 150, h: 127 },
-  { logo: `${MEDIA}/partners/kerala-startup-mission.webp`, name: "Kerala Startup Mission", w: 274, h: 162 },
+  { logo: `${MEDIA}/partners/kerala-startup-mission.svg`, name: "Kerala Startup Mission", w: 330, h: 184 },
   { logo: `${MEDIA}/partners/afc-india.webp`, name: "AFC India", w: 200, h: 200 },
 ];
 
 export const contact = {
-  email: "hello@zeroearth.company",
-  partnerMail: "mailto:hello@zeroearth.company?subject=Partnering%20with%20ZeroEarth",
-  teamMail: "mailto:hello@zeroearth.company?subject=Talk%20to%20the%20ZeroEarth%20team",
+  email: "info@zeroearth.company",
+  phone: "+91 79076 35263",
+  phoneHref: "tel:+917907635263",
+  demoMail: "mailto:info@zeroearth.company?subject=gramCarbon%20demo%20request",
+  address: ["STPI, Phase 1, Technopark,", "Thiruvananthapuram, Kerala, 695581"],
 };

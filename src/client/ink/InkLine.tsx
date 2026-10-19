@@ -26,9 +26,9 @@ import type { InkScene } from "./types";
  * - Progress: one number, the length of line drawn, laid end to end across the
  *   pieces. A link is drawn down to the drawing head (72% down the viewport),
  *   so it writes through each headline as the head passes it; a scene is
- *   drawn as the head moves down its box. The hero cow
- *   follows pointer travel or the first quarter-screen of scroll instead
- *   (a touch screen has no pointer, so there it draws itself).
+ *   drawn as the head moves down its box. The hero cow draws itself once the
+ *   page opens (pointer travel or the first quarter-screen of scroll can
+ *   finish it sooner).
  * - Drawing: the shown length eases toward that target each frame, and each
  *   path reveals its share through stroke-dashoffset. Labels fade in at their
  *   fraction of the stroke; the last scene can glow; the finale swaps the
@@ -42,7 +42,7 @@ const HEAD = 0.72;
 const POINTER_TRAVEL = 2200;
 /** scrolling this fraction of a screen also completes the cow */
 const HERO_SCROLL = 0.25;
-/** a touch screen has no pointer travel to draw the cow with: it draws itself, over this long (s) */
+/** the hero cow draws itself over this long (s) once the page opens */
 const SELF_DRAW = 2.2;
 /**
  * One stroke weight for the whole line, in every scene and link: a little
@@ -618,8 +618,9 @@ export function InkLine() {
     /* ── the hero cow follows the pointer ─────────────────────────────────── */
     // pointer moves over the loader would draw it unseen: listen from the reveal on
     let pointerLive = false;
-    // touch screens (no hover): the cow draws itself once the page opens, and again on each return to the top
-    const selfDraws = !still && window.matchMedia("(hover: none)").matches;
+    // the cow draws itself once the page opens, and again on each return to the
+    // top, so it is never left half-drawn waiting for the pointer to move
+    const selfDraws = !still;
     function selfDraw() {
       gsap.killTweensOf(line);
       gsap.to(line, { pointer: 1, duration: SELF_DRAW, delay: 0.3, ease: "power1.inOut", onUpdate: requestDraw });

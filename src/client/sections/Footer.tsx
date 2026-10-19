@@ -48,10 +48,17 @@ export function Footer() {
         </ul>
         <div className="footer-hq">
           <p className="mono">headquarters</p>
-          <p>Kerala, India</p>
+          <p className="footer-address">
+            {contact.address[0]}
+            <br />
+            {contact.address[1]}
+          </p>
           <p className="mono">contact</p>
-          <p>
+          <p className="footer-contact">
             <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          </p>
+          <p>
+            <a href={contact.phoneHref}>{contact.phone}</a>
           </p>
         </div>
       </div>

@@ -33,16 +33,21 @@ export function Scene({ id, kicker, doodle, doodleLabel, glow, children }: Scene
   );
 }
 
-/** The outlined "learn more" pills under a chapter. */
-export function LearnMore({ links }: { links: [label: string, href: string][] }) {
+/** One item in a chapter's icon row: a tinted badge with a line icon, then the label. */
+export interface Feature {
+  label: string;
+  icon: ReactNode;
+  tint: "lime" | "teal" | "purple";
+}
+
+/** A row of key items under a chapter's copy: plain items, not links. */
+export function Features({ label, items }: { label: string; items: Feature[] }) {
   return (
-    <ul className="pills pills--links" aria-label="Learn more">
-      {links.map(([label, href]) => (
-        <li key={href}>
-          {/* one text node: two would break the hover underline before the arrow */}
-          <a href={href} target="_blank" rel="noreferrer">
-            {`${label} ↗`}
-          </a>
+    <ul className="feats" aria-label={label}>
+      {items.map((item) => (
+        <li key={item.label}>
+          <span className={`feat-badge feat-badge--${item.tint}`}>{item.icon}</span>
+          {item.label}
         </li>
       ))}
     </ul>

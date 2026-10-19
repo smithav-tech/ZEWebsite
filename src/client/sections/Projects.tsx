@@ -32,9 +32,9 @@ export function Projects() {
       <div className="wrap">
         <p className="kicker">projects</p>
         <h2 className="display">
-          from science
+          From Science
           <br />
-          to the <span className="grad">field.</span>
+          to the <span className="grad">Field.</span>
         </h2>
         <p className="body projects-intro">
           Field trials, farmer partnerships and commercial pilots deploying clean dairy across India.

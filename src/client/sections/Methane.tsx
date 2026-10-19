@@ -16,7 +16,7 @@ export function Methane() {
       doodleLabel="Line drawing of CH4 bubbles sent down an arrow into the ground: less methane"
     >
       <h2 className="display">
-        <span className="grad">23%</span> less methane.
+        <span className="grad">23%</span> Less Methane.
       </h2>
       <p className="fine">
         <strong>
@@ -26,7 +26,7 @@ export function Methane() {
       </p>
       <p className="fine muted">
         Researched with ICAR scientists. 100% natural supplement and BIS-listed ingredients that replaces 3–5% of
-        filler in cattle feed, with no change on the farm.
+        filler in cattle feed, with no change on the farm or feeding cost.
       </p>
     </Scene>
   );

@@ -222,7 +222,6 @@ button {
   font-size: clamp(3.4rem, 1.2rem + 9vw, 11rem);
   line-height: 0.88;
   letter-spacing: -0.05em;
-  text-transform: lowercase;
   width: fit-content;
   max-width: 100%;
 }
@@ -271,28 +270,90 @@ button {
   padding: 0.85rem 1.5rem;
   border-radius: 999px;
   text-decoration: none;
-  color: var(--ink);
-  background: var(--grad);
+  color: var(--milk);
+  background: var(--ink);
   border: 0;
-  box-shadow: 0 10px 24px -14px #173c3b99;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+  transition: background 0.2s;
 }
+/* flat: no raised edge or lift, just a darker fill on hover and press */
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 28px -14px #173c3b99;
+  color: var(--milk);
+  background: #0f2b2a;
+}
+.btn:active {
+  background: #0b2221;
 }
 .btn--sm {
   padding: 0.55rem 1.1rem;
   font-size: 0.98rem;
 }
 .btn--ghost {
+  color: var(--ink);
   background: transparent;
   box-shadow: inset 0 0 0 1.5px var(--ink);
 }
 .btn--ghost:hover {
-  background: #fffbeeb3;
+  color: var(--ink);
+  background: rgba(23, 60, 59, 0.06);
+}
+.btn--ghost:active {
+  background: rgba(23, 60, 59, 0.1);
+}
+/* the call-to-action pill: label plus a lime circle holding an icon */
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 8px 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--milk);
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 0.97rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-cta:hover {
+  color: var(--milk);
+  background: #0f2b2a;
+}
+.btn-cta-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--lime);
+  color: var(--ink);
+  transition: transform 0.2s;
+}
+.btn-cta:hover .btn-cta-icon {
+  transform: translateX(2px);
+}
+.btn-cta--lg {
+  height: 52px;
+  padding: 0 10px 0 26px;
+  font-size: 1.06rem;
+}
+.btn-cta--lg .btn-cta-icon {
+  width: 32px;
+  height: 32px;
+}
+/* icon first (Back to Home): the padding swaps sides and the icon stays put */
+.btn-cta--back {
+  padding: 0 20px 0 8px;
+}
+.btn-cta--back.btn-cta--lg {
+  padding: 0 26px 0 10px;
+}
+.btn-cta--back:hover .btn-cta-icon {
+  transform: none;
 }
 .logo {
   display: inline-flex;
@@ -314,36 +375,50 @@ button {
   height: 76px;
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
+}
+/* the logo sits inside the glass bar's rounded end */
+.nav-inner > .logo {
+  padding-left: 16px;
 }
 .nav nav {
   margin-left: auto;
 }
 .nav-links {
   display: flex;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 2px;
 }
 .nav-links a {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 13px;
+  border-radius: 999px;
   text-decoration: none;
   font-family: var(--display);
-  font-size: 1.05rem;
+  font-weight: 500;
+  font-size: 0.97rem;
   color: var(--ink);
-  opacity: 0.75;
+  transition: background 0.2s;
 }
 .nav-links a:hover {
-  opacity: 1;
-  text-decoration: underline;
-  text-decoration-color: var(--teal);
-  text-underline-offset: 6px;
-  text-decoration-thickness: 2px;
+  background: rgba(23, 60, 59, 0.07);
+}
+/* the page you are on (Projects, Team) */
+.nav .nav-links a[aria-current="page"] {
+  text-decoration: none;
+  background: rgba(166, 207, 114, 0.38);
+}
+/* between the home sections and the other pages */
+.nav-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 10px;
+  background: rgba(23, 60, 59, 0.18);
 }
 .nav--scrolled {
   background: transparent;
-}
-.nav-links a {
-  text-shadow:
-    0 0 6px rgba(255, 250, 246, 0.95),
-    0 0 2px rgba(255, 250, 246, 0.95);
 }
 .nav-toggle {
   display: none;
@@ -413,10 +488,21 @@ button {
   }
   .nav--open .nav-links a {
     display: block;
+    height: auto;
     padding: 0.9rem 0;
+    border-radius: 0;
     font-size: 1.28rem;
     border-bottom: 1px solid var(--line);
-    opacity: 1;
+  }
+  .nav--open .nav-links a:hover {
+    background: transparent;
+  }
+  .nav .nav-links a[aria-current="page"] {
+    background: transparent;
+    color: var(--teal);
+  }
+  .nav--open .nav-divider {
+    display: none;
   }
 }
 .hero {
@@ -446,7 +532,6 @@ button {
   white-space: nowrap;
   line-height: 0.88;
   letter-spacing: -0.05em;
-  text-transform: lowercase;
 }
 .hero-art {
   position: absolute;
@@ -456,44 +541,105 @@ button {
   aspect-ratio: 1370 / 856;
   z-index: 0;
 }
-/* laptops: the end of the title's last line comes close to the calf, so the drawing
-   steps a little further out and down to give the corner some air */
-@media (min-width: 861px) and (max-width: 1366px) {
+/* desktop: the cow sits beside the copy, centred in the space right of it,
+   rather than down in the bottom corner under an empty band */
+@media (min-width: 861px) {
+  .hero {
+    --hero-art-w: min(clamp(300px, 34vw, 540px), 62vh);
+  }
   .hero-art {
-    translate: calc(var(--gutter) * 0.55) 1.75rem;
+    top: 50%;
+    bottom: auto;
+    /* half the drawing's height (856 / 1370 of its width) */
+    margin-top: calc(var(--hero-art-w) * -0.3124);
   }
 }
+/* laptops: the drawing steps a little further out to give the copy some air */
+@media (min-width: 861px) and (max-width: 1366px) {
+  .hero-art {
+    translate: calc(var(--gutter) * 0.55) 0;
+  }
+}
+/* the intro under the title: kept narrow so it stays clear of the cow */
+.hero-copy {
+  max-width: min(620px, 52vw);
+  margin-top: 2rem;
+}
+.hero-copy p {
+  font-size: clamp(1.05rem, 0.95rem + 0.3vw, 1.19rem);
+  line-height: 1.6;
+}
+.hero-copy p + p {
+  margin-top: 0.75rem;
+}
+.hero-copy .hero-tagline {
+  margin-bottom: 1rem;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.hero-copy .hero-tagline + p {
+  margin-top: 0;
+}
+/* a soft pill: a mouse whose wheel rolls down, and the prompt; it jumps to the first chapter */
 .scroll-cue {
-  margin-top: 2.6rem;
+  margin-top: 2.25rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.8rem;
-  font-family: var(--mono);
-  font-size: 0.88rem;
-  letter-spacing: 0.1em;
-  color: var(--muted);
+  gap: 0.75rem;
+  padding: 0.5rem 1.15rem 0.5rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.7);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 0.94rem;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 0.2s;
 }
-.scroll-cue i {
-  width: 2px;
-  height: 46px;
-  background: linear-gradient(var(--doodle), transparent);
+.scroll-cue:hover {
+  color: var(--ink);
+  background: #fff;
+}
+.scroll-mouse {
+  position: relative;
+  flex: none;
+  width: 22px;
+  height: 32px;
+  border-radius: 11px;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.scroll-mouse::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 4px;
+  height: 7px;
+  margin-left: -2px;
   border-radius: 2px;
+  background: var(--grad);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .scroll-cue i {
-    animation: cue 2.2s ease-in-out infinite;
-    transform-origin: top;
+  .scroll-mouse::after {
+    animation: cue 1.8s ease-in-out infinite;
   }
 }
 @keyframes cue {
   0% {
-    transform: scaleY(0);
+    transform: translateY(0);
+    opacity: 1;
   }
-  60% {
-    transform: scaleY(1);
+  70% {
+    transform: translateY(9px);
+    opacity: 0;
   }
   to {
-    transform: scaleY(1);
+    transform: translateY(0);
     opacity: 0;
   }
 }
@@ -535,7 +681,7 @@ button {
 /* desktop: two separate columns, the copy on the left and the doodle on the
    right, centred on each other so a chapter is only as tall as the taller of
    the two. The headline stays in the copy column, sized so most of its lines
-   ("still has value.", 5.76em) still fit as written. */
+   ("Still Has Value.", 6.12em in title case) still fit as written. */
 @media (min-width: 861px) {
   /* one headline size for every page: the home chapters, the hero, and the team and projects pages */
   :root {
@@ -548,7 +694,7 @@ button {
   }
   .display,
   .hero-title {
-    font-size: min(var(--display-was), var(--copy-col) / 5.8);
+    font-size: min(var(--display-was), var(--copy-col) / 6.3);
   }
   /* the copy as one block, so the doodle beside it never stretches the gaps in it */
   .scene-copy {
@@ -563,71 +709,66 @@ button {
     margin-top: 0;
   }
 }
-.pills {
+/* a chapter's key items: tinted icon badges with labels, split by hairlines */
+.feats {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 1.25rem;
+  gap: 1.25rem 1.75rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
 }
-.pills li {
-  font-family: var(--display);
-  font-size: 1rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
-  background: #fffbeecc;
-  box-shadow: inset 0 0 0 1px var(--line);
-  color: var(--ink);
-}
-.pills li:nth-child(1) {
-  box-shadow: inset 0 0 0 1.5px var(--lime);
-}
-.pills li:nth-child(2) {
-  box-shadow: inset 0 0 0 1.5px var(--teal);
-}
-.pills li:nth-child(3) {
-  box-shadow: inset 0 0 0 1.5px var(--purple);
-}
-.pills li:nth-child(4) {
-  box-shadow: inset 0 0 0 1.5px var(--orange);
-}
-.steps {
-  margin-top: 1.4rem;
-  display: grid;
-  gap: 0.55rem;
-  counter-reset: s;
-  max-width: 380px;
-}
-.steps li {
-  counter-increment: s;
+.feats li {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.875rem;
   font-family: var(--display);
-  font-size: 1.14rem;
+  font-weight: 500;
+  font-size: 1.125rem;
+  line-height: 1.2;
   color: var(--ink);
 }
-.steps li:before {
-  content: counter(s, decimal-leading-zero);
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  color: #fff;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
+.feats li + li {
+  padding-left: 1.75rem;
+  border-left: 1px solid var(--line);
+}
+.feat-badge {
   display: grid;
   place-items: center;
-  background: var(--teal);
   flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
 }
-.steps li:nth-child(2):before {
-  background: var(--aqua);
+.feat-badge--lime {
+  background: rgba(166, 207, 114, 0.24);
+  color: #4f7a22;
 }
-.steps li:nth-child(3):before {
-  background: var(--purple);
+.feat-badge--teal {
+  background: rgba(98, 194, 172, 0.24);
+  color: #2b7a6d;
 }
-.steps li:nth-child(4):before {
-  background: var(--orange);
-  color: var(--ink);
+.feat-badge--purple {
+  background: rgba(175, 128, 184, 0.24);
+  color: #7a4c84;
+}
+/* phones: the row wraps, so a left hairline would hang at a line start */
+@media (max-width: 560px) {
+  .feats li + li {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+/* longer body copy (two paragraphs) sets a touch smaller */
+.body--long {
+  max-width: 44ch;
+  font-size: clamp(1.08rem, 1rem + 0.3vw, 1.31rem);
+}
+.body--long + .body--long {
+  margin-top: 0.75rem;
+}
+.scene-action {
+  margin-top: 1.75rem;
 }
 .block {
   padding: var(--section-y) 0;
@@ -682,52 +823,6 @@ button {
 .partners {
   padding-top: clamp(3rem, 6vw, 5rem);
 }
-.logo-wall {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.8rem;
-}
-.logo-wall li {
-  background: #fffcf2d9;
-  border-radius: 16px;
-  height: 84px;
-  display: grid;
-  place-items: center;
-  padding: 0.9rem;
-  box-shadow: 0 0 0 1px var(--line);
-}
-.logo-wall img {
-  max-height: 52px;
-  max-width: 100%;
-  object-fit: contain;
-  filter: grayscale(1) contrast(0.9);
-  opacity: 0.7;
-  mix-blend-mode: multiply;
-  transition:
-    filter 0.3s,
-    opacity 0.3s;
-}
-.logo-wall li:hover img {
-  filter: none;
-  opacity: 1;
-}
-.partner-cta {
-  margin-top: 3.5rem;
-  text-align: center;
-}
-.partner-cta p {
-  font-family: var(--display);
-  font-size: clamp(1.4rem, 1.1rem + 1.1vw, 2rem);
-  color: var(--ink);
-}
-.partner-actions {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-}
 .footer {
   padding: clamp(2.5rem, 1.5rem + 3vw, 3.5rem) 0 1.5rem;
   border-top: 1px solid var(--line);
@@ -772,6 +867,13 @@ button {
   color: var(--ink);
   margin-bottom: 1.2rem;
 }
+.footer-hq .footer-address {
+  line-height: 1.5;
+}
+/* the email and phone sit together as one block */
+.footer-hq .footer-contact {
+  margin-bottom: 0.35rem;
+}
 .footer-legal {
   display: flex;
   justify-content: space-between;
@@ -794,9 +896,6 @@ button {
   .advisors,
   .advisors ul {
     grid-template-columns: 1fr;
-  }
-  .logo-wall {
-    grid-template-columns: repeat(4, 1fr);
   }
   .footer-top {
     grid-template-columns: 1fr 1fr;
@@ -825,11 +924,11 @@ button {
   .hero-art {
     width: 62vw;
   }
-  /* sized to the column: 5.9em keeps "still has value." and the hero's
-     "decarbonising" (5.88em) on one line */
+  /* sized to the column: 6.3em keeps "Still Has Value." (6.12em) and the
+     hero's "Decarbonising" (6.01em) on one line in title case */
   .display,
   .hero-title {
-    font-size: clamp(3rem, (100vw - 2 * var(--gutter)) / 5.9, 7.9rem);
+    font-size: clamp(2.8rem, (100vw - 2 * var(--gutter)) / 6.3, 7.9rem);
   }
   .scene-inner {
     grid-template-columns: 1fr;
@@ -849,11 +948,6 @@ button {
     justify-self: center;
   }
 }
-@media (max-width: 560px) {
-  .logo-wall {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
 sub {
   font-size: 0.68em;
   line-height: 0;
@@ -863,30 +957,8 @@ sub {
   letter-spacing: 0;
   margin: 0 -0.06em;
 }
-.pills--links a {
-  color: inherit;
-  text-decoration: none;
-  display: inline-block;
-}
-.pills--links li {
-  transition:
-    background 0.2s,
-    box-shadow 0.2s;
-}
-.pills--links li:hover {
-  background: #fff;
-}
-.pills--links a:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
-}
 /* touch: a taller tap area for the small links, with the layout unchanged */
 @media (pointer: coarse) {
-  .pills--links a {
-    padding: 10px 0.85rem;
-    margin: -10px -0.85rem;
-  }
   .footer-links a,
   .footer-hq a {
     display: inline-block;

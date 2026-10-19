@@ -1,4 +1,6 @@
 import { GramCarbonLogo } from "../components/Brand";
+import { ArrowIcon } from "../components/Icons";
+import { contact } from "../content";
 import { Scene } from "./Scene";
 
 /** gramCarbon: trace, measure, verify. */
@@ -11,19 +13,22 @@ export function GramCarbon() {
       doodleLabel="A map pin, a bar chart and a shield with a tick: trace, measure, verify"
     >
       <h2 className="display">
-        trace.
+        Trace.
         <br />
-        measure.
+        Measure.
         <br />
-        <span className="grad">verify.</span>
+        <span className="grad">Verify.</span>
       </h2>
       <p className="body">
         <GramCarbonLogo className="gc-logo--inline" /> records every handover on WhatsApp smart cards, gives each batch
         and farmer a CCC-ID, and turns supply-chain data into auditable, farmer-level emission reductions.
       </p>
-      <p className="fine">
-        <a className="btn" href="https://gramcarbon.zeroearth.company/dashboard" target="_blank" rel="noreferrer">
-          explore gramcarbon dashboard ↗
+      <p className="scene-action">
+        <a className="btn-cta btn-cta--lg" href={contact.demoMail}>
+          Ask a Demo
+          <span className="btn-cta-icon">
+            <ArrowIcon />
+          </span>
         </a>
       </p>
     </Scene>

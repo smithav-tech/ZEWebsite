@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import "./client.css";
 import "./fx/type3d.css";
+import { HomeIcon } from "./components/Icons";
 import { Nav } from "./components/Nav";
 import { HeadingFx } from "./fx/HeadingFx";
 import { TiltFx } from "./fx/Tilt";
@@ -31,8 +32,11 @@ function SubPage({ children }: { children: ReactNode }) {
         <main id="main" className="team-page">
           {children}
           <div className="wrap team-back">
-            <a className="btn" {...pageLink("/")}>
-              back to home
+            <a className="btn-cta btn-cta--lg btn-cta--back" {...pageLink("/")}>
+              <span className="btn-cta-icon" aria-hidden="true">
+                <HomeIcon />
+              </span>
+              Back to Home
             </a>
           </div>
         </main>

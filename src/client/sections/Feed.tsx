@@ -1,4 +1,5 @@
-import { LearnMore, Scene } from "./Scene";
+import { BowlIcon, DropIcon, GrassIcon } from "../components/Icons";
+import { Features, Scene } from "./Scene";
 
 /** Feed and fodder: the Total Mixed Ration. */
 export function Feed() {
@@ -10,20 +11,21 @@ export function Feed() {
       doodleLabel="Fodder grass, a tractor carrying fodder, and a feed bowl"
     >
       <h2 className="display">
-        from volume
+        From Volume
         <br />
-        to <span className="grad">quality.</span>
+        to <span className="grad">Quality.</span>
       </h2>
       <p className="lede">the next dairy transition.</p>
       <p className="body">
-        A standardised <strong>Total Mixed Ration</strong>, made by farmer producer organisations and delivered through
-        the cooperative network.
+        A standardised <strong>Total Mixed Ration</strong>, made by farmer groups and delivered through the existing
+        supply chain in partnership.
       </p>
-      <LearnMore
-        links={[
-          ["TMR", "https://nddb.coop/services/animalnutrition/crop-residue-management/total-mixed-ration-dry"],
-          ["fodder stress", "https://en.wikipedia.org/wiki/Fodder"],
-          ["animal productivity", "https://en.wikipedia.org/wiki/Dairy_cattle"],
+      <Features
+        label="Focus areas"
+        items={[
+          { label: "TMR", icon: <BowlIcon />, tint: "lime" },
+          { label: "Fodder Stress", icon: <GrassIcon />, tint: "teal" },
+          { label: "Animal Productivity", icon: <DropIcon />, tint: "purple" },
         ]}
       />
     </Scene>

@@ -366,6 +366,96 @@
   padding-block: clamp(2rem, 5vw, 4rem);
 }
 
+/* ── the advisory board: its own full-width band, big grey-portrait cards ──
+   (overrides the older .advisors rules in client.css with extra specificity) */
+.advisors-band {
+  padding: 88px 0;
+  background: linear-gradient(160deg, #eef5e4 0%, #e3f1ea 55%, #d9eeec 100%);
+  border-top: 1px solid rgba(23, 60, 59, 0.08);
+  border-bottom: 1px solid rgba(23, 60, 59, 0.08);
+}
+.advisors-band .kicker {
+  color: var(--body);
+}
+.advisors-band h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(2.75rem, 5.6vw, 5rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+.advisors-band .advisors {
+  margin-top: 44px;
+  padding-top: 0;
+  border-top: 0;
+  display: block;
+  grid-template-columns: none;
+}
+.advisors-band .advisors ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.advisors-band .advisors li {
+  display: block;
+  padding: 16px 16px 28px;
+  border-radius: 28px;
+  background: #fffcf6;
+  box-shadow:
+    0 0 0 1px rgba(23, 60, 59, 0.08),
+    0 24px 40px -28px rgba(23, 60, 59, 0.35);
+}
+.advisors-band .advisor-photo {
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 70% at 50% 100%, rgba(255, 255, 255, 0.6), transparent 60%),
+    linear-gradient(160deg, #efeeeb, #e4e3df 55%, #d9d8d4);
+}
+.advisors-band .advisor-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: contain;
+  object-position: 50% 100%;
+  filter: grayscale(1) contrast(1.05);
+  transition: filter 0.4s ease;
+}
+.advisors-band .advisors li:hover .advisor-photo img {
+  filter: none;
+}
+.advisors-band .advisors h3 {
+  margin: 22px 8px 0;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  color: var(--ink);
+}
+.advisors-band .advisors li p {
+  margin: 8px 8px 0;
+  font-size: 17.5px;
+  line-height: 1.5;
+  color: var(--body);
+}
+@media (max-width: 640px) {
+  .advisors-band {
+    padding: 56px 0;
+  }
+  .advisors-band .advisors ul {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* the nav link for the page you are on */
 .nav-links a[aria-current="page"] {
   opacity: 1;

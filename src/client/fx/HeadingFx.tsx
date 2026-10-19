@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import "./headings.css";
 
 const TARGETS =
-  ".hero-title, .display, .leader h3, .advisors h3, .partners h3, .partner-cta-title, .footer-tag";
+  ".hero-title, .display, .leader h3, .advisors h3, .partners h3, .contact-title, .footer-tag";
 
 function getHeadingTarget(target: Element | null): HTMLElement | null {
   if (!target) return null;

@@ -199,13 +199,14 @@ export function Team() {
 
 
   return (
+    <>
     <section className="block team" id="team" ref={section}>
       <div className="wrap">
         <p className="kicker">team</p>
         <h2 className="display">
-          the people
+          The People
           <br />
-          behind the <span className="grad">line.</span>
+          Behind the <span className="grad">Line.</span>
         </h2>
         <p className="body team-intro">
           A women-led team with 25+ years of cumulative experience in the climate sector.
@@ -218,26 +219,41 @@ export function Team() {
                 <Portrait photo={person.photo} name={person.name} index={i} cutout={false} />
                 <h3>{person.name}</h3>
                 <p className="role">{person.role}</p>
-                <p className="bio">{person.bio}</p>
               </article>
             </li>
           ))}
         </ul>
+      </div>
+    </section>
+    <section className="advisors-band" aria-labelledby="advisors-title">
+      <div className="wrap">
+        <p className="kicker">advisory board</p>
+        <h2 id="advisors-title">Our Advisors</h2>
         <div className="advisors">
-          <h3>advisors</h3>
           <ul>
-            {advisors.map((advisor, i) => (
-              <li key={advisor.name} data-tilt="">
-                <Portrait photo={advisor.photo} name={advisor.name} index={i + 2} round cutout={false} />
-                <div>
-                  <strong>{advisor.name}</strong>
+            {advisors.map((advisor) => {
+              const [w, h] = sizeOf(advisor.photo) ?? [];
+              return (
+                <li key={advisor.name} data-tilt="">
+                  <div className="advisor-photo">
+                    <img
+                      src={advisor.photo}
+                      alt={`Image of ${advisor.name}`}
+                      width={w}
+                      height={h}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <h3>{advisor.name}</h3>
                   <p>{advisor.affiliation}</p>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
     </section>
+    </>
   );
 }

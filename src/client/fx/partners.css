@@ -1,115 +1,214 @@
-/* Partners section: full-colour logo cards, CTA. Loads after client.css. */
+/* Partners section: the moving logo carousel and the contact card. Loads after client.css. */
 .partners {
   padding-top: var(--section-y);
   padding-bottom: var(--section-y);
 }
-/* ---------- logo cards: white tiles, full colour, no blend or filter ---------- */
-/* a wrapping row rather than a grid, so a short last row (10 logos in 4 or 3
-   columns) sits centred instead of hanging off the left */
-.partners .logo-wall {
-  --cols: 5;
-  --gap: clamp(0.7rem, 1.4vw, 1.2rem);
-  /* first thing in the section now: the section's own padding spaces it */
-  margin-top: 0;
+.partners > .kicker--center {
+  margin-bottom: 2rem;
+}
+
+/* ---------- logo carousel: full width, full colour, edges fade out ---------- */
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.marquee-track {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--gap);
+  width: max-content;
+  animation: marquee 40s linear infinite;
 }
-.partners .logo-wall li {
-  flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
-  min-width: 0;
-  --tile: clamp(110px, 11.5vw, 170px);
-  --pad: clamp(0.7rem, 1.4vw, 1.2rem);
-  height: var(--tile);
-  padding: var(--pad);
-  border-radius: 20px;
-  background: #fff;
-  box-shadow:
-    0 0 0 1px var(--line),
-    0 14px 24px -18px rgba(23, 60, 59, 0.35);
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
 }
-.partners .logo-wall img {
+/* each copy carries a trailing gap, so -50% lands exactly on the second copy */
+.marquee-logos {
+  display: flex;
+  align-items: center;
+  gap: clamp(3rem, 6.5vw, 6rem);
+  padding-right: clamp(3rem, 6.5vw, 6rem);
+}
+.marquee-logos li {
+  flex: none;
+  height: clamp(88px, 9vw, 128px);
+  display: grid;
+  place-items: center;
+}
+.marquee-logos img {
   width: auto;
   height: auto;
-  /* fill the tile but never exceed the file's native pixel size */
-  max-width: min(100%, var(--w));
-  max-height: min(var(--h), calc(var(--tile) - 2 * var(--pad)));
+  max-height: clamp(60px, 6.4vw, 92px);
+  max-width: clamp(150px, 16vw, 230px);
   object-fit: contain;
-  filter: none;
-  opacity: 1;
-  mix-blend-mode: normal;
+  transition: transform 0.3s;
 }
-.partners .logo-wall li:hover img {
-  filter: none;
+.marquee-logos li:hover img {
+  transform: scale(1.06);
 }
-
-@media (max-width: 1000px) {
-  .partners .logo-wall {
-    --cols: 4;
-  }
-  .partners .logo-wall li {
-    --tile: clamp(104px, 16vw, 150px);
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
   }
 }
-@media (max-width: 700px) {
-  .partners .logo-wall {
-    --cols: 3;
-  }
-}
-@media (max-width: 480px) {
-  .partners .logo-wall {
-    --cols: 2;
-  }
-  .partners .logo-wall li {
-    --tile: 104px;
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
   }
 }
 
-/* ---------- CTA: the conversion point ---------- */
-.partners .partner-cta {
-  margin-top: clamp(2.5rem, 5vw, 4rem);
-  padding: clamp(2.4rem, 5vw, 4.6rem) clamp(1.2rem, 4vw, 3rem);
+/* ---------- contact card: the conversion point ---------- */
+.contact-card {
+  margin-top: clamp(3rem, 6vw, 4.5rem);
+  padding: clamp(1.5rem, 4vw, 3rem);
   border-radius: 32px;
-  background:
-    radial-gradient(120% 140% at 85% -10%, rgba(139, 214, 196, 0.55), transparent 55%),
-    radial-gradient(90% 120% at 0% 110%, rgba(214, 236, 170, 0.55), transparent 60%),
-    linear-gradient(150deg, rgba(255, 255, 255, 0.8), rgba(233, 243, 222, 0.55));
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: #fffcf6;
   box-shadow:
-    inset 0 1px 0 #fff,
-    inset 0 -18px 34px -20px rgba(23, 60, 59, 0.22),
-    0 0 0 1px var(--line),
-    0 40px 70px -32px rgba(23, 60, 59, 0.55),
-    0 16px 26px -16px rgba(23, 60, 59, 0.3);
+    0 0 0 1px rgba(23, 60, 59, 0.08),
+    0 2px 4px rgba(23, 60, 59, 0.04),
+    0 18px 36px -12px rgba(23, 60, 59, 0.18),
+    0 48px 80px -32px rgba(23, 60, 59, 0.22);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem 4rem;
 }
-.partners .partner-cta .partner-cta-kicker {
-  font-size: 0.95rem;
-  font-family: var(--mono);
-  font-size: 0.95rem;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  margin-bottom: 1.2rem;
+.contact-intro {
+  flex: 1 1 340px;
+  min-width: 0;
 }
-.partners .partner-cta .partner-cta-title {
-  max-width: 22ch;
-  margin-inline: auto;
-  text-wrap: balance;
-  font-size: clamp(1.9rem, 1rem + 3.4vw, 4rem);
-  line-height: 1.08;
+.contact-intro .kicker {
+  margin-bottom: 0.75rem;
+}
+.contact-title {
+  max-width: 16ch;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 1.2rem + 2vw, 2.5rem);
+  line-height: 1.12;
   letter-spacing: -0.03em;
+  color: var(--ink);
 }
-.partners .partner-actions {
-  margin-top: clamp(1.6rem, 3vw, 2.4rem);
+.contact-alt {
+  margin-top: 1.25rem;
+  font-size: 1.06rem;
+}
+.contact-alt a {
+  color: var(--ink);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.contact-form {
+  flex: 1.3 1 420px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
-.partners .partner-actions .btn {
-  font-size: 1.2rem;
-  padding: 1.05rem 2rem;
+.contact-topics {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
 }
-@media (max-width: 480px) {
-  .partners .partner-actions .btn {
+.contact-topics legend,
+.field {
+  font-family: var(--display);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.contact-topics legend {
+  padding: 0;
+  margin-bottom: 0.625rem;
+}
+.contact-topics > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.choice {
+  position: relative;
+  display: inline-flex;
+}
+.choice input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.choice span {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(23, 60, 59, 0.2);
+  background: #fff;
+  font-family: var(--display);
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+.choice input:checked + span {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--milk);
+}
+.choice input:focus-visible + span {
+  outline: 3px solid var(--orange);
+  outline-offset: 3px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.field--wide {
+  grid-column: 1 / -1;
+}
+.input {
+  font-family: var(--text);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid rgba(23, 60, 59, 0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+textarea.input {
+  resize: vertical;
+}
+.input:focus {
+  border-color: #3d8f86;
+  box-shadow: 0 0 0 3px rgba(98, 194, 172, 0.3);
+}
+.input::placeholder {
+  color: var(--muted);
+}
+.contact-send {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+@media (max-width: 560px) {
+  .contact-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contact-send .btn-cta {
     width: 100%;
-    justify-content: center;
+    justify-content: space-between;
   }
 }

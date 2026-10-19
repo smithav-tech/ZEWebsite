@@ -5,13 +5,7 @@ import "./tilt.css";
 const MAX_TILT = 8;
 
 /** Groups below the ink line whose items fly in from depth when they scroll into view. */
-const ENTER_GROUPS = [
-  ".team .leaders",
-  ".team .advisors ul",
-  ".projects .leaders",
-  ".partners .logo-wall",
-  ".partners .partner-cta",
-];
+const ENTER_GROUPS = [".team .leaders", ".advisors ul", ".projects .leaders"];
 
 /**
  * One delegated pointer handler tilts every [data-tilt] element toward the

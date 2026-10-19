@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { pageLink, sectionLink, usePath } from "../router";
 import { Ch4ow, GramCarbonLogo, ZeroEarthLogo } from "./Brand";
+import { ArrowIcon } from "./Icons";
 
 const LINKS: [href: string, label: ReactNode][] = [
   ["#methane", <Ch4ow />],
@@ -27,7 +28,7 @@ export function Nav() {
   return (
     <header className={`nav ${scrolled ? "nav--scrolled" : ""} ${open ? "nav--open" : ""}`}>
       <div className="nav-inner">
-        <ZeroEarthLogo />
+        <ZeroEarthLogo height={28} />
         <nav aria-label="Main">
           <ul className="nav-links" id="nav-links">
             {LINKS.map(([href, label]) => (
@@ -35,6 +36,7 @@ export function Nav() {
                 <a {...sectionLink(href, path, close)}>{label}</a>
               </li>
             ))}
+            <li className="nav-divider" aria-hidden="true" />
             <li>
               <a {...pageLink("/projects", close)} aria-current={path === "/projects" ? "page" : undefined}>
                 Projects
@@ -47,8 +49,11 @@ export function Nav() {
             </li>
           </ul>
         </nav>
-        <a className="btn btn--sm nav-cta" {...sectionLink("#partners", path, close)}>
-          partner with us
+        <a className="btn-cta nav-cta" {...sectionLink("#contact", path, close)}>
+          Partner with us
+          <span className="btn-cta-icon">
+            <ArrowIcon />
+          </span>
         </a>
         <button className="nav-toggle" aria-expanded={open} aria-controls="nav-links" onClick={() => setOpen((o) => !o)}>
           <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>

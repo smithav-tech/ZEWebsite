@@ -1,6 +1,7 @@
-import { LearnMore, Scene } from "./Scene";
+import { FlameIcon, TankIcon } from "../components/Icons";
+import { Features, Scene } from "./Scene";
 
-/** Green energy: manure to compressed biogas. */
+/** Green energy: manure to renewable fuel. */
 export function Energy() {
   return (
     <Scene
@@ -10,20 +11,25 @@ export function Energy() {
       doodleLabel="A cow, her manure going into a biogas plant that makes CBG, and organic fertiliser feeding the fodder fields"
     >
       <h2 className="display">
-        what remains
+        What Remains
         <br />
-        still has <span className="grad">value.</span>
+        Still Has <span className="grad">Value.</span>
       </h2>
-      <p className="body">
-        Manure becomes <strong>compressed biogas (CBG)</strong> and organic fertiliser. Managed well, it cuts emissions,
-        returns nutrients to the fodder fields and adds another income stream to the dairy system.
+      <p className="lede">Turning waste into renewable fuel.</p>
+      <p className="body body--long">
+        At Zero Earth, we are building a circular dairy economy by transforming cattle manure into high-quality
+        biomethane.
       </p>
-      <LearnMore
-        links={[
-          ["CBG", "https://en.wikipedia.org/wiki/Biogas"],
-          ["manure management", "https://en.wikipedia.org/wiki/Manure_management"],
-          ["nutrient recovery", "https://en.wikipedia.org/wiki/Resource_recovery"],
-          ["circularity", "https://en.wikipedia.org/wiki/Circular_economy"],
+      <p className="body body--long">
+        Through decentralised collection networks and advanced biogas upgrading, we aim to produce automotive-grade{" "}
+        <strong>compressed biogas (CBG)</strong> and explore <strong>liquefied biomethane (bio-LNG)</strong> for
+        heavy-duty transport, shipping and industrial applications.
+      </p>
+      <Features
+        label="Energy outputs"
+        items={[
+          { label: "CBG", icon: <FlameIcon />, tint: "lime" },
+          { label: "Bio LNG", icon: <TankIcon />, tint: "teal" },
         ]}
       />
     </Scene>

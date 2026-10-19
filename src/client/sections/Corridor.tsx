@@ -11,9 +11,9 @@ export function Corridor() {
       doodleLabel="One route linking a cow, a sack of CH4OW feed, a tractor, a milk can, a biogas plant with its flame, and a phone showing data"
     >
       <h2 className="display">
-        one dairy system.
+        One Dairy System.
         <br />
-        one <span className="grad">climate</span> transition.
+        One <span className="grad">Climate</span> Transition.
       </h2>
       <p className="lede">clean low-carbon milk corridor.</p>
       <p className="body">
