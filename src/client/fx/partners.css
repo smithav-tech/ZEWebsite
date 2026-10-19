@@ -1,0 +1,115 @@
+/* Partners section: full-colour logo cards, CTA. Loads after client.css. */
+.partners {
+  padding-top: var(--section-y);
+  padding-bottom: var(--section-y);
+}
+/* ---------- logo cards: white tiles, full colour, no blend or filter ---------- */
+/* a wrapping row rather than a grid, so a short last row (10 logos in 4 or 3
+   columns) sits centred instead of hanging off the left */
+.partners .logo-wall {
+  --cols: 5;
+  --gap: clamp(0.7rem, 1.4vw, 1.2rem);
+  /* first thing in the section now: the section's own padding spaces it */
+  margin-top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap);
+}
+.partners .logo-wall li {
+  flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  min-width: 0;
+  --tile: clamp(110px, 11.5vw, 170px);
+  --pad: clamp(0.7rem, 1.4vw, 1.2rem);
+  height: var(--tile);
+  padding: var(--pad);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 14px 24px -18px rgba(23, 60, 59, 0.35);
+}
+.partners .logo-wall img {
+  width: auto;
+  height: auto;
+  /* fill the tile but never exceed the file's native pixel size */
+  max-width: min(100%, var(--w));
+  max-height: min(var(--h), calc(var(--tile) - 2 * var(--pad)));
+  object-fit: contain;
+  filter: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+.partners .logo-wall li:hover img {
+  filter: none;
+}
+
+@media (max-width: 1000px) {
+  .partners .logo-wall {
+    --cols: 4;
+  }
+  .partners .logo-wall li {
+    --tile: clamp(104px, 16vw, 150px);
+  }
+}
+@media (max-width: 700px) {
+  .partners .logo-wall {
+    --cols: 3;
+  }
+}
+@media (max-width: 480px) {
+  .partners .logo-wall {
+    --cols: 2;
+  }
+  .partners .logo-wall li {
+    --tile: 104px;
+  }
+}
+
+/* ---------- CTA: the conversion point ---------- */
+.partners .partner-cta {
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  padding: clamp(2.4rem, 5vw, 4.6rem) clamp(1.2rem, 4vw, 3rem);
+  border-radius: 32px;
+  background:
+    radial-gradient(120% 140% at 85% -10%, rgba(139, 214, 196, 0.55), transparent 55%),
+    radial-gradient(90% 120% at 0% 110%, rgba(214, 236, 170, 0.55), transparent 60%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.8), rgba(233, 243, 222, 0.55));
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -18px 34px -20px rgba(23, 60, 59, 0.22),
+    0 0 0 1px var(--line),
+    0 40px 70px -32px rgba(23, 60, 59, 0.55),
+    0 16px 26px -16px rgba(23, 60, 59, 0.3);
+}
+.partners .partner-cta .partner-cta-kicker {
+  font-size: 0.95rem;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 1.2rem;
+}
+.partners .partner-cta .partner-cta-title {
+  max-width: 22ch;
+  margin-inline: auto;
+  text-wrap: balance;
+  font-size: clamp(1.9rem, 1rem + 3.4vw, 4rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+.partners .partner-actions {
+  margin-top: clamp(1.6rem, 3vw, 2.4rem);
+  gap: 1rem;
+}
+.partners .partner-actions .btn {
+  font-size: 1.2rem;
+  padding: 1.05rem 2rem;
+}
+@media (max-width: 480px) {
+  .partners .partner-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

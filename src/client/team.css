@@ -1,0 +1,374 @@
+/*
+ * Team portraits: living milk behind the cutouts (sections/Team.tsx).
+ *
+ * Layers, back to front, all behind the photo: the mint card itself, a
+ * swirl of lime and cyan light, a milk-white satin sheen, a hover ripple, a
+ * faint hand-drawn thread (team cards). Only transform and opacity
+ * move; nothing runs until the section is on screen ([data-live]), and
+ * reduced motion keeps the still composition.
+ *
+ * Every rule is scoped under .team so it outranks client.css without
+ * editing it.
+ */
+
+:is(.team, .projects) .portrait {
+  isolation: isolate;
+}
+/* the old static halo: the moving light replaces it */
+:is(.team, .projects) .portrait::before {
+  content: none;
+}
+:is(.team, .projects) .portrait img {
+  z-index: 1;
+}
+/* soften the square crops some cutouts have at the top or a side; Team.tsx
+   sizes the mask to the picture as drawn ("contain" at the bottom of the box) */
+:is(.team, .projects) .portrait.portrait--cutout:not(.portrait--round) img {
+  --pt-fade: linear-gradient(to bottom, transparent, #000 7px);
+  --pt-sides: linear-gradient(to right, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+  -webkit-mask-image: var(--pt-fade), var(--pt-sides);
+  mask-image: var(--pt-fade), var(--pt-sides);
+  -webkit-mask-size: var(--pt-mask-size, 100% 100%);
+  mask-size: var(--pt-mask-size, 100% 100%);
+  -webkit-mask-position: var(--pt-mask-pos, 0 0);
+  mask-position: var(--pt-mask-pos, 0 0);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+:is(.team, .projects) .pt-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ── the swirl: two soft lights orbiting the head, each breathing on its own ── */
+:is(.team, .projects) .pt-swirl {
+  position: absolute;
+  inset: 0;
+  opacity: 0.6;
+  animation: pt-turn 38s linear infinite;
+  animation-direction: var(--pt-dir, normal);
+  animation-delay: calc(var(--pt-t, 0) * -1s);
+  transition: opacity 1.2s ease;
+}
+:is(.team, .projects) .pt-blob {
+  position: absolute;
+  border-radius: 50%;
+}
+:is(.team, .projects) .pt-blob--lime {
+  left: var(--pt-lime-x);
+  top: var(--pt-lime-y);
+  width: 96%;
+  aspect-ratio: 1;
+  background: radial-gradient(
+    closest-side,
+    rgba(166, 207, 114, 0.62),
+    rgba(166, 207, 114, 0.3) 48%,
+    rgba(166, 207, 114, 0)
+  );
+  animation: pt-breathe-a 12s ease-in-out infinite alternate;
+  animation-delay: calc((var(--pt-t, 0) + 5) * -1s);
+}
+:is(.team, .projects) .pt-blob--cyan {
+  left: var(--pt-cyan-x);
+  top: var(--pt-cyan-y);
+  width: 88%;
+  aspect-ratio: 1;
+  background: radial-gradient(
+    closest-side,
+    rgba(61, 187, 201, 0.46),
+    rgba(76, 191, 190, 0.22) 50%,
+    rgba(76, 191, 190, 0)
+  );
+  animation: pt-breathe-b 14s ease-in-out infinite alternate;
+  animation-delay: calc((var(--pt-t, 0) + 13) * -1s);
+}
+/* milk satin: a long soft highlight folding slowly across the card */
+:is(.team, .projects) .pt-blob--milk {
+  left: var(--pt-milk-x);
+  top: var(--pt-milk-y);
+  width: 118%;
+  height: 46%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 253, 246, 0.28) 46%,
+    rgba(255, 253, 246, 0)
+  );
+  animation: pt-sheen 9.5s ease-in-out infinite alternate;
+  animation-delay: calc((var(--pt-t, 0) + 3) * -1s);
+}
+
+/* ── the thread: one thin hand-drawn arc, low behind the shoulders ── */
+:is(.team, .projects) .pt-thread {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  opacity: 0.35;
+  animation: pt-float 10s ease-in-out infinite alternate;
+  animation-delay: calc((var(--pt-t, 0) + 9) * -1s);
+  transition: opacity 1s ease;
+}
+:is(.team, .projects) .pt-thread path {
+  fill: none;
+  stroke: #183a3a;
+  /* user units, so it scales with the card (non-scaling-stroke would make
+     Chrome dash in screen pixels and break pathLength): stepped below so it
+     lands near 1.6px at every card width */
+  stroke-width: 0.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 100;
+  transition: stroke-dashoffset 2.6s cubic-bezier(0.6, 0.05, 0.2, 1) 0.2s;
+}
+/* drawn in once the section first arrives, its last stretch left open */
+:is(.team, .projects)[data-drawn] .pt-thread path {
+  stroke-dashoffset: 12;
+}
+:is(.team, .projects)[data-drawn] .leader-cell:nth-child(2) .pt-thread path {
+  transition-delay: 0.45s;
+}
+:is(.team, .projects)[data-drawn] .leader-cell:nth-child(3) .pt-thread path {
+  transition-delay: 0.7s;
+}
+:is(.team, .projects)[data-drawn] .leader-cell:nth-child(4) .pt-thread path {
+  transition-delay: 0.95s;
+}
+
+/* ── hover: the light swells, the thread closes, a milk ripple opens behind the head ── */
+:is(.team, .projects) .pt-ripple {
+  position: absolute;
+  left: 18%;
+  top: 4%;
+  width: 64%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 14px rgba(255, 255, 255, 0.7),
+    0 0 0 1px rgba(76, 191, 190, 0.28);
+  opacity: 0;
+}
+@media (hover: hover) {
+  :is(.team, .projects) :is(.leader, .project-card):hover .pt-bg,
+  .team .advisors li:hover .pt-bg {
+    transform: scale(1.06);
+  }
+  :is(.team, .projects) :is(.leader, .project-card):hover .pt-swirl,
+  .team .advisors li:hover .pt-swirl {
+    opacity: 1;
+  }
+  :is(.team, .projects) :is(.leader, .project-card):hover .pt-thread {
+    opacity: 0.6;
+  }
+  :is(.team, .projects) :is(.leader, .project-card):hover .pt-thread path {
+    stroke-dashoffset: 0;
+    transition-duration: 1.2s;
+    transition-delay: 0s;
+  }
+  :is(.team, .projects) :is(.leader, .project-card):hover .pt-ripple,
+  .team .advisors li:hover .pt-ripple {
+    animation: pt-ripple 2.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  :is(.team, .projects) :is(.leader, .project-card):hover .pt-ripple--echo,
+  .team .advisors li:hover .pt-ripple--echo {
+    animation: pt-ripple-echo 2.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.18s both;
+  }
+}
+
+/* ── the round advisor portraits: the same milk, scaled to a 132px circle ── */
+.team .portrait--round .pt-blob--lime {
+  width: 100%;
+}
+.team .portrait--round .pt-blob--milk {
+  height: 56%;
+}
+/* projects card widths per grid breakpoint (.leaders: 1, 2, then 4 across), so the thread lands near 1.6px */
+@media (min-width: 420px) and (max-width: 639px) {
+  .projects .portrait:not(.portrait--round) .pt-thread path {
+    stroke-width: 0.75;
+  }
+}
+@media (min-width: 640px) and (max-width: 999px) {
+  .projects .portrait:not(.portrait--round) .pt-thread path {
+    stroke-width: 0.55;
+  }
+}
+@media (min-width: 1000px) {
+  .projects .portrait:not(.portrait--round) .pt-thread path {
+    stroke-width: 0.62;
+  }
+}
+.team .portrait--round .pt-ripple {
+  left: 14%;
+  top: 6%;
+  width: 72%;
+}
+
+/* ── photos (team portraits on their own studio backdrop, project shots) ── */
+:is(.team, .projects) .portrait--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.projects .portrait--cutout img {
+  width: auto;
+  height: auto;
+  max-width: min(92%, var(--w, 1000) * 1px);
+  max-height: 94%;
+  object-fit: contain;
+  object-position: 50% 100%;
+}
+
+/* nothing moves until the section is near the screen, and it stops again off it */
+:is(.team, .projects) .pt-swirl,
+:is(.team, .projects) .pt-blob,
+:is(.team, .projects) .pt-thread {
+  animation-play-state: paused;
+}
+:is(.team, .projects)[data-live] .pt-swirl,
+:is(.team, .projects)[data-live] .pt-blob,
+:is(.team, .projects)[data-live] .pt-thread {
+  animation-play-state: running;
+}
+
+@keyframes pt-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pt-breathe-a {
+  from {
+    transform: translate(-7%, 5%) scale(0.9);
+  }
+  to {
+    transform: translate(9%, -7%) scale(1.16);
+  }
+}
+@keyframes pt-breathe-b {
+  from {
+    transform: translate(7%, -5%) scale(1.12);
+  }
+  to {
+    transform: translate(-9%, 9%) scale(0.88);
+  }
+}
+@keyframes pt-sheen {
+  from {
+    transform: translate(-16%, 16%) rotate(-24deg);
+  }
+  to {
+    transform: translate(14%, -14%) rotate(-10deg);
+  }
+}
+@keyframes pt-float {
+  from {
+    transform: translate(-1.5%, 1.2%) rotate(-2.5deg);
+  }
+  to {
+    transform: translate(1.5%, -1.5%) rotate(2.5deg);
+  }
+}
+@keyframes pt-ripple {
+  from {
+    transform: scale(0.55);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+@keyframes pt-ripple-echo {
+  from {
+    transform: scale(0.55);
+    opacity: 0.75;
+  }
+  to {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* reduced motion: the same composition, held still, the threads already drawn */
+@media (prefers-reduced-motion: reduce) {
+  :is(.team, .projects) .pt-swirl,
+  :is(.team, .projects) .pt-blob,
+  :is(.team, .projects) .pt-thread,
+  :is(.team, .projects) .pt-ripple {
+    animation: none !important;
+  }
+  :is(.team, .projects) .pt-bg,
+  :is(.team, .projects) .pt-swirl,
+  :is(.team, .projects) .pt-thread,
+  :is(.team, .projects) .pt-thread path {
+    transition: none;
+  }
+  :is(.team, .projects) .pt-thread path {
+    stroke-dashoffset: 12;
+  }
+}
+
+/* ── the team and projects grids: everything on show at once, a short last row centred ── */
+:is(.team, .projects) .leaders {
+  --cols: 1;
+  --gap: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.2rem var(--gap);
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+}
+:is(.team, .projects) .leader-cell {
+  flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  min-width: 0;
+}
+@media (min-width: 420px) {
+  :is(.team, .projects) .leaders {
+    --cols: 2;
+  }
+}
+@media (min-width: 640px) {
+  .team .leaders {
+    --cols: 3;
+  }
+}
+@media (min-width: 1100px) {
+  .team .leaders {
+    --cols: 5;
+  }
+}
+/* four projects: two by two, then all four in a row */
+@media (min-width: 1000px) {
+  .projects .leaders {
+    --cols: 4;
+  }
+}
+
+/* the standalone team page: clear the fixed nav, and a way back home */
+.team-page {
+  /* just the fixed nav's height: the section's own --section-y does the rest,
+     so the kicker lands where the home hero's does (~150px down on desktop) */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 76px);
+}
+.team-back {
+  display: flex;
+  justify-content: center;
+  padding-block: clamp(2rem, 5vw, 4rem);
+}
+
+/* the nav link for the page you are on */
+.nav-links a[aria-current="page"] {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+}
