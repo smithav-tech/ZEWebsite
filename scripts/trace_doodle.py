@@ -1,7 +1,7 @@
 """Trace a one-line doodle image into a single continuous SVG path (M + C only).
 
 usage: python scripts/trace_doodle.py design/doodles/3-feed.png out/feed [--entry left|top|bottom|right] [--exit bottom|right|left] [--eps 1.5] [--work 2048] [--smooth 2] [--gap 60]
-writes out_prefix.json ({w, h, d, start, end, stats}) and out_prefix.png (preview)
+writes out_prefix.json ({w, h, d, start, end, origin, stats}; origin is the box's top-left in the image, at 1024 wide) and out_prefix.png (preview)
 """
 import heapq
 import json
@@ -58,11 +58,13 @@ def bridge(mask, max_gap=60):
         if len(comps) < 2:
             return mask
         main = np.array(comps[0])
+        # points per chunk, so each distance table stays ~64 MB however long the main stroke is
+        step = max(1, 4_000_000 // len(main))
         best = None
         for c in comps[1:]:
             ca = np.array(c)
-            for i in range(0, len(ca), 400):
-                chunk = ca[i : i + 400]
+            for i in range(0, len(ca), step):
+                chunk = ca[i : i + step]
                 d2 = ((chunk[:, None, :] - main[None, :, :]) ** 2).sum(-1)
                 j = np.unravel_index(np.argmin(d2), d2.shape)
                 dist = math.sqrt(d2[j])
@@ -498,7 +500,7 @@ def main():
         "dropped_specks": len(small),
         "chars": len(d),
     }
-    json.dump({"w": W, "h": H, "d": d, "start": [fx, fy], "end": list(endp), "stats": stats}, open(out + ".json", "w"))
+    json.dump({"w": W, "h": H, "d": d, "start": [fx, fy], "end": list(endp), "origin": [round(x0 * s, 1), round(y0 * s, 1)], "stats": stats}, open(out + ".json", "w"))
     # preview: the path in order, light to dark, with start (green) and end (red)
     S = 2
     im = Image.new("RGB", (W * S, H * S), "white")

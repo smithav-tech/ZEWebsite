@@ -538,7 +538,7 @@ button {
   right: var(--gutter);
   bottom: var(--hero-art-gap);
   width: var(--hero-art-w);
-  aspect-ratio: 709 / 400;
+  aspect-ratio: 1024 / 620;
   z-index: 0;
 }
 /* desktop: the cow sits beside the copy, centred in the space right of it,
@@ -550,8 +550,8 @@ button {
   .hero-art {
     top: 50%;
     bottom: auto;
-    /* half the drawing's height (400 / 709 of its width) */
-    margin-top: calc(var(--hero-art-w) * -0.2821);
+    /* half the drawing's height (620 / 1024 of its width) */
+    margin-top: calc(var(--hero-art-w) * -0.3027);
   }
 }
 /* laptops: the drawing steps a little further out to give the copy some air */
@@ -826,6 +826,33 @@ button {
 .projects-intro {
   max-width: 44ch;
 }
+.projects-head {
+  margin-bottom: 3rem;
+}
+.projects-journey {
+  margin-top: 1.75rem;
+}
+.projects-journey h3 {
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+/* wide screens: the headline on the left, the story beside it from the same top line, so
+   the top of the page is one band and the photos follow straight away */
+@media (min-width: 861px) {
+  .projects-head {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+  .projects-journey {
+    margin-top: 0;
+  }
+  .projects-journey .body {
+    max-width: 52ch;
+  }
+}
 .advisors {
   margin-top: 3.5rem;
   padding-top: 2rem;
@@ -973,6 +1000,11 @@ button {
   .hero-art {
     width: 62vw;
   }
+  /* the cow is under the copy, not beside it: the copy takes the column,
+     less a margin on the right for the line to run down to the cow */
+  .hero-copy {
+    max-width: min(620px, 100% - 2.75rem);
+  }
   /* sized to the column: 6.3em keeps "Still Has Value." (6.12em) and the
      hero's "Decarbonising" (6.01em) on one line in title case */
   .display,
@@ -982,11 +1014,13 @@ button {
   .scene-inner {
     grid-template-columns: 1fr;
   }
+  /* the gap above the drawing is where the line runs across from the right
+     margin to the drawing's left edge, clear of the copy */
   .scene-art {
     grid-column: 1;
     grid-row: auto;
     max-height: none;
-    margin-top: 1.25rem;
+    margin-top: clamp(2.75rem, 2rem + 3vw, 3.75rem);
   }
 }
 /* tablets, stacked: a doodle the full ~700px column wide made every chapter

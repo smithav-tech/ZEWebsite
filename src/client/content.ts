@@ -59,6 +59,12 @@ export interface Advisor {
 
 export const advisors: Advisor[] = [
   {
+    photo: `${MEDIA}/advisors/trevor-tomkins.webp`,
+    name: "Dr. Trevor Tomkins",
+    affiliation: "President & Founder, venture | dairy",
+    bio: "Dr. Trevor Tomkins is an experienced expert in dairy science, animal nutrition, and the global dairy industry. He is the President and Founder of venture | dairy, supporting dairy-sector development and business growth. He has held senior leadership roles, including President of Milk Specialties Company, and has extensive international experience in dairy production and processing. His work focuses on sustainable dairy development, improving milk quality, strengthening dairy value chains, and supporting rural prosperity.",
+  },
+  {
     photo: `${MEDIA}/advisors/gert-van-duinkerken.webp`,
     name: "Dr. Gert van Duinkerken",
     affiliation: "Director, Wageningen Livestock Research",
@@ -69,12 +75,6 @@ export const advisors: Advisor[] = [
     name: "Dr. Sejian Veerasamy",
     affiliation: "Principal Scientist, ICAR–NIANP, Bengaluru",
     bio: "Dr. Sejian Veerasamy is a Principal Scientist at ICAR–National Institute of Animal Nutrition and Physiology (NIANP), Bengaluru, India. His research focuses on climate change impacts on livestock, animal physiology, and environmental stress adaptation. He works on developing climate-resilient sheep and goat breeds that can withstand heat stress and changing environmental conditions. His work contributes to sustainable livestock production and strategies to reduce greenhouse gas emissions from agriculture.",
-  },
-  {
-    photo: `${MEDIA}/advisors/trevor-tomkins.webp`,
-    name: "Dr. Trevor Tomkins",
-    affiliation: "President & Founder, venture | dairy",
-    bio: "Dr. Trevor Tomkins is an experienced expert in dairy science, animal nutrition, and the global dairy industry. He is the President and Founder of venture | dairy, supporting dairy-sector development and business growth. He has held senior leadership roles, including President of Milk Specialties Company, and has extensive international experience in dairy production and processing. His work focuses on sustainable dairy development, improving milk quality, strengthening dairy value chains, and supporting rural prosperity.",
   },
 ];
 
@@ -97,39 +97,51 @@ export const projects: ProjectShot[] = [
     role: "feed trials · milma",
     bio: "Field trials with KVASU and feed testing with Milma cooperatives.",
     photo: `${MEDIA}/projects/kerala-kvasu-milma.webp`,
-    alt: "Kerala: feed trials with KVASU and testing with Milma",
-    w: 456,
-    h: 452,
-    cutout: true,
+    alt: "Kerala: a young brown cow in a halter in a misty green pasture",
+    w: 1400,
+    h: 933,
   },
   {
     name: "Rajasthan",
     role: "corridor development",
     bio: "Clean dairy corridor linking fodder farms, FPOs and processing plants.",
     photo: `${MEDIA}/projects/rajasthan-corridor.webp`,
-    alt: "Rajasthan: corridor development",
-    w: 239,
-    h: 334,
-    cutout: true,
+    alt: "Rajasthan: a red cow with a dark calf beside a water trough",
+    w: 949,
+    h: 1400,
   },
   {
     name: "Milky Mist",
     role: "Tamil Nadu · CH₄OW",
     bio: "Commercial cattle feed fortified with CH₄OW cutting enteric methane at the source.",
     photo: `${MEDIA}/projects/milky-mist-tamil-nadu.webp`,
-    alt: "Milky Mist, Tamil Nadu: CH₄OW-fortified cattle feed",
+    alt: "Milky Mist, Tamil Nadu: a smiling girl beside grain drying on the road",
     w: 1400,
-    h: 883,
+    h: 1355,
   },
   {
     name: "Nainarpalayam",
     role: "Tamil Nadu · Gates-supported",
     bio: "Gates Foundation-supported field deployment with women dairy farmers.",
     photo: `${MEDIA}/projects/nainarpalayam-tamil-nadu.webp`,
-    alt: "Nainarpalayam, Tamil Nadu: Gates-supported field work with women dairy farmers",
+    alt: "Nainarpalayam, Tamil Nadu: women dairy farmers with the MCC@100 Milk Climate Cooperative Project banner",
     w: 1400,
-    h: 933,
+    h: 701,
   },
+];
+
+/** the field gallery on /projects: real photos from the programmes, all cropped to 960 x 1200 (4:5, the card frame) */
+export const fieldPhotos: { photo: string; alt: string }[] = [
+  { photo: `${MEDIA}/gallery/field-01.webp`, alt: "A smiling woman dairy farmer at a cooperative meeting" },
+  { photo: `${MEDIA}/gallery/field-02.webp`, alt: "A red cow and a dark calf looking at the camera" },
+  { photo: `${MEDIA}/gallery/field-03.webp`, alt: "Women dairy farmers going through forms together" },
+  { photo: `${MEDIA}/gallery/field-04.webp`, alt: "A CH4OW feed bag on a farm, with a buffalo behind it" },
+  { photo: `${MEDIA}/gallery/field-05.webp`, alt: "A farmer seated outside a village house" },
+  { photo: `${MEDIA}/gallery/field-06.webp`, alt: "A CH4OW feed bag on top of wrapped silage bales" },
+  { photo: `${MEDIA}/gallery/field-07.webp`, alt: "A woman farmer listening at a cooperative meeting" },
+  { photo: `${MEDIA}/gallery/field-08.webp`, alt: "A milk collector riding down a tree-lined village road" },
+  { photo: `${MEDIA}/gallery/field-09.webp`, alt: "A woman farmer smiling during a training session" },
+  { photo: `${MEDIA}/gallery/field-10.webp`, alt: "A village street of painted houses under a grey sky" },
 ];
 
 export interface Partner {
@@ -159,4 +171,6 @@ export const contact = {
   phoneHref: "tel:+917907635263",
   demoMail: "mailto:info@zeroearth.company?subject=gramCarbon%20demo%20request",
   address: ["STPI, Phase 1, Technopark,", "Thiruvananthapuram, Kerala, 695581"],
+  /** the office, 8°33'21.7"N 76°52'51.2"E */
+  office: { lat: 8.556028, lng: 76.880889 },
 };

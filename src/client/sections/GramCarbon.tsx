@@ -1,6 +1,6 @@
 import { GramCarbonLogo } from "../components/Brand";
 import { ArrowIcon } from "../components/Icons";
-import { contact } from "../content";
+import { CONTACT_TOPIC } from "./Partners";
 import { Scene } from "./Scene";
 
 /** gramCarbon: trace, measure, verify. */
@@ -24,7 +24,11 @@ export function GramCarbon() {
         and farmer a CCC-ID, and turns supply-chain data into auditable, farmer-level emission reductions.
       </p>
       <p className="scene-action">
-        <a className="btn-cta btn-cta--lg" href={contact.demoMail}>
+        <a
+          className="btn-cta btn-cta--lg"
+          href="#contact"
+          onClick={() => window.dispatchEvent(new CustomEvent(CONTACT_TOPIC, { detail: "demo" }))}
+        >
           Ask a Demo
           <span className="btn-cta-icon">
             <ArrowIcon />

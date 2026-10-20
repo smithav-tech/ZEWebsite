@@ -74,10 +74,10 @@ const SIZES: Record<string, [number, number]> = {
   "gert-van-duinkerken": [400, 400],
   "trevor-tomkins": [400, 400],
   "veerasamy-sejian": [400, 400],
-  "kerala-kvasu-milma": [456, 452],
-  "rajasthan-corridor": [239, 334],
-  "milky-mist-tamil-nadu": [1400, 883],
-  "nainarpalayam-tamil-nadu": [1400, 933],
+  "kerala-kvasu-milma": [1400, 933],
+  "rajasthan-corridor": [949, 1400],
+  "milky-mist-tamil-nadu": [1400, 1355],
+  "nainarpalayam-tamil-nadu": [1400, 701],
 };
 const sizeOf = (photo: string) => SIZES[photo.replace(/^.*\/|\.\w+$/g, "")];
 

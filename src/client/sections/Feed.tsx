@@ -18,7 +18,7 @@ export function Feed() {
       <p className="lede">the next dairy transition.</p>
       <p className="body">
         A standardised <strong>Total Mixed Ration</strong>, made by farmer groups and delivered through the existing
-        supply chain in partnership.
+        supply chain in partnership with leading milk companies.
       </p>
       <Features
         label="Focus areas"

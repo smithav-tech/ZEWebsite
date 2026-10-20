@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { projects } from "../content";
-import { Portrait, setLive } from "./Team";
+import { fieldPhotos } from "../content";
+import { setLive } from "./Team";
 import "../team.css";
 
 export function Projects() {
@@ -31,24 +31,29 @@ export function Projects() {
     <section className="block projects" id="projects" ref={section}>
       <div className="wrap">
         <p className="kicker">projects</p>
-        <h2 className="display">
-          From Science
-          <br />
-          to the <span className="grad">Field.</span>
-        </h2>
-        <p className="body projects-intro">
-          Field trials, farmer partnerships and commercial pilots deploying clean dairy across India.
-        </p>
-        {/* every project at once */}
-        <ul className="leaders" aria-label="Projects">
-          {projects.map((item, i) => (
-            <li className="leader-cell" key={item.name}>
-              <article className="leader project-card">
-                <Portrait photo={item.photo} name={item.name} index={i} cutout={item.cutout ?? false} />
-                <h3>{item.name}</h3>
-                <p className="role">{item.role}</p>
-                <p className="bio">{item.bio}</p>
-              </article>
+        {/* the headline and the story beside it, so the section opens as one band */}
+        <div className="projects-head">
+          <h2 className="display">
+            From Science
+            <br />
+            to the <span className="grad">Field.</span>
+          </h2>
+          <div className="projects-journey">
+            <h3>From Pilots to Real-World Impact.</h3>
+            <p className="body">
+              A glimpse into Zero Earth’s journey from field trials to commercial adoption. From our Gates
+              Foundation-supported pilot with 100 women dairy farmers in Nainarpalayam to trials and commercial
+              integration with leading milk companies.
+            </p>
+          </div>
+        </div>
+        {/* photos from the field, in the project-card frame, with no captions */}
+        <ul className="leaders field-photos" aria-label="Photos from the field">
+          {fieldPhotos.map((item) => (
+            <li className="leader-cell project-card" key={item.photo}>
+              <div className="portrait portrait--photo">
+                <img src={item.photo} alt={item.alt} width={960} height={1200} loading="lazy" decoding="async" />
+              </div>
             </li>
           ))}
         </ul>

@@ -194,6 +194,12 @@ const MAX_TILT = Math.tan((25 * Math.PI) / 180);
 
 /** vertical drop into or out of the margin lane, as a share of the sideways move; the first ones read best */
 const DROPS = [1, 0.8, 1.3, 0.6, 1.7, 0.45, 0.3];
+/**
+ * ...and short ones, tried only when none of those finds a way: on a phone the
+ * copy runs nearly the full width, so the line has to leave the lane just
+ * under the copy and run straight across above the next drawing
+ */
+const SHORT_DROPS = [0.15, 0.08, 0.04];
 
 /** the lane down the right margin sits this far in from the page edge, and never closer than LANE_MIN */
 const LANE_IN = 18;
@@ -264,12 +270,15 @@ function clearWay(a: Waypoint, b: Waypoint, obstacles: Box[], ctx: RouteContext)
   if (!blocked(a, b, obstacles, ctx.width, ctx.straight)) return [];
   const lane = laneFor(a, b, obstacles, ctx);
   if (lane === null) return null;
-  // the way into the lane depends only on the first drop, the way out only on the second
-  const ins = DROPS.map((drop) => lanePair(a, b, lane, drop, drop)[0]).filter((l1) => !blocked(a, l1, obstacles, ctx.width, ctx.straight));
-  const outs = DROPS.map((drop) => lanePair(a, b, lane, drop, drop)[1]).filter((l2) => !blocked(l2, b, obstacles, ctx.width, ctx.straight));
-  for (const l1 of ins) {
-    for (const l2 of outs) {
-      if (l2.p[1] > l1.p[1] + 1 && !blocked(l1, l2, obstacles, ctx.width, ctx.straight)) return [l1, ...wobble(l1, l2, obstacles, ctx), l2];
+  // the usual drops first, so a way they find never changes; the short ones only as a fallback
+  for (const drops of [DROPS, [...DROPS, ...SHORT_DROPS]]) {
+    // the way into the lane depends only on the first drop, the way out only on the second
+    const ins = drops.map((drop) => lanePair(a, b, lane, drop, drop)[0]).filter((l1) => !blocked(a, l1, obstacles, ctx.width, ctx.straight));
+    const outs = drops.map((drop) => lanePair(a, b, lane, drop, drop)[1]).filter((l2) => !blocked(l2, b, obstacles, ctx.width, ctx.straight));
+    for (const l1 of ins) {
+      for (const l2 of outs) {
+        if (l2.p[1] > l1.p[1] + 1 && !blocked(l1, l2, obstacles, ctx.width, ctx.straight)) return [l1, ...wobble(l1, l2, obstacles, ctx), l2];
+      }
     }
   }
   return null;

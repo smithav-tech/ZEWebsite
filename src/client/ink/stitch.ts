@@ -1,4 +1,4 @@
-import { blocked, keepsClear, pathData, samplePath, turn, unit, type Box, type Headline, type Vec, type Waypoint } from "./route";
+import { blocked, keepsClear, pathData, route, samplePath, turn, unit, type Box, type Headline, type Vec, type Waypoint } from "./route";
 
 /**
  * The hero's first stroke. The line begins as the tail of the last letter of
@@ -64,7 +64,18 @@ export function heroStitch(
     const cost = length(points) + sharpest(points) * em * 2 + (keepsClear(points, drawing, stroke * 2.5, stroke * 18) ? 0 : 1e5);
     if (!best || cost < best.cost) best = { cost, points };
   }
-  return best?.points ?? [...legs, end];
+  if (best) return best.points;
+  // no swoop is clear (stacked, the copy runs under the title nearly the full
+  // width): out to the lane down the right margin, across above the drawing,
+  // down just clear of its left-most stroke and into its first stroke, as the
+  // links between the chapters do
+  const clear = Math.max(12, stroke * 4);
+  const left = Math.min(to[0], ...drawing.map((q) => q[0])) - clear;
+  const above: Vec = [left, Math.min(...drawing.map((q) => q[1])) - clear];
+  if (above[1] <= from.p[1]) return [...legs, end];
+  const way = route(from.p, above, [], { obstacles: all, width }, [0, 1], from.dir).slice(1, -1);
+  const turnIn = Math.min(clear * 2, to[0] - left, to[1] - above[1]);
+  return [...legs, ...way, { p: above, dir: [0, 1] }, { p: [left, to[1] - turnIn], dir: [0, 1] }, end];
 }
 
 function length(points: Waypoint[]) {

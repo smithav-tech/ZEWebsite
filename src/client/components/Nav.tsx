@@ -4,7 +4,7 @@ import { Ch4ow, GramCarbonLogo, ZeroEarthLogo } from "./Brand";
 import { ArrowIcon } from "./Icons";
 
 const LINKS: [href: string, label: ReactNode][] = [
-  ["#methane", <Ch4ow />],
+  ["#", <Ch4ow />], // opens the page at the top
   ["#feed", "Feed"],
   ["#energy", "Energy"],
   ["#corridor", "Corridor"],

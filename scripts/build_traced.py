@@ -24,14 +24,14 @@ ROOT = os.path.dirname(HERE)
 FINE = ["--eps", "0.9", "--work", "2048", "--smooth", "3"]
 
 SCENES = [
-    ("cow", "HERO", "1-hero-cow-calf", "left", "bottom", (120, 0, 829, 400), "the hero: a dairy cow nursing her calf", FINE),
+    ("cow", "HERO", "1-hero-cow-calf", "left", "bottom", (0, 0, 1024, 620), "the hero: a cow and her calf (from design/deck-cow-calf.svg)", FINE),
     ("methane", "METHANE", "2-methane", "left", "bottom", (110, 0, 1014, 830), "CH4OW: a contented cow burping a string of round methane bubbles",
      [*FINE, "--gap", "160"]),
     ("feed", "FEED", "3-feed", "left", "bottom", (60, 0, 1024, 500), "feed and TMR: fodder grass, a bowl of TMR, a tractor hauling bales", FINE),
     ("energy", "ENERGY", "4-energy", "left", "bottom", (90, 0, 923, 560), "green energy: fodder, cow, manure, biogas plant and CBG, fertiliser, round again"),
     ("corridor", "CORRIDOR", "5-corridor", "left", "right", (40, 0, 1024, 670), "the corridor: cow, feed, tractor, milk, biogas and data on one road"),
     ("gramcarbon", "GRAMCARBON", "6-gramcarbon", "left", "bottom", (140, 0, 953, 230), "gramCarbon: the line writes the wordmark, the logo's three petals for its r", FINE),
-    ("offsets", "OFFSETS", "7-carbon-value", "left", "bottom", (150, 0, 869, 740), "carbon value: the ZE SITA coin, a front-facing tagged cow's head inside two rims", FINE),
+    ("offsets", "OFFSETS", "7-carbon-value", "left", "bottom", (160, 0, 851, 860), "carbon value: the coin, a simple front-facing cow's head with a plain tag and a $ tag inside two rims", FINE),
 ]
 
 NUM = r"-?\d+(?:\.\d+)?"
@@ -62,6 +62,20 @@ def trim(d, crop):
     return " ".join(parts), round(x1 - x0), round(y1 - y0)
 
 
+def trace(scene, tmp):
+    """trace one SCENES entry; returns the tracer's json and the trimmed (d, w, h)"""
+    key, const, image, entry, exit_, crop, desc, *extra = scene
+    opts = extra[0] if extra else ["--eps", "1.5"]
+    prefix = os.path.join(tmp, key)
+    subprocess.run(
+        [sys.executable, os.path.join(HERE, "trace_doodle.py"), os.path.join(ROOT, "design", "doodles", image + ".png"), prefix,
+         "--entry", entry, "--exit", exit_, *opts],
+        check=True, capture_output=True,
+    )
+    j = json.load(open(prefix + ".json"))
+    return j, trim(j["d"], crop)
+
+
 def main():
     out = [
         "/**",
@@ -78,16 +92,9 @@ def main():
         "",
     ]
     tmp = tempfile.mkdtemp()
-    for key, const, image, entry, exit_, crop, desc, *extra in SCENES:
-        opts = extra[0] if extra else ["--eps", "1.5"]
-        prefix = os.path.join(tmp, key)
-        subprocess.run(
-            [sys.executable, os.path.join(HERE, "trace_doodle.py"), os.path.join(ROOT, "design", "doodles", image + ".png"), prefix,
-             "--entry", entry, "--exit", exit_, *opts],
-            check=True, capture_output=True,
-        )
-        j = json.load(open(prefix + ".json"))
-        d, w, h = trim(j["d"], crop)
+    for scene in SCENES:
+        key, const, image, entry, exit_, crop, desc, *extra = scene
+        j, (d, w, h) = trace(scene, tmp)
         print(key, w, h, d.count("C"), "segments", j["stats"]["retraced_edges"], "retraced")
         out.append(f"/** {desc} */")
         out.append(f'export const {const} = {{ w: {w}, h: {h}, d: "{d}" }};')

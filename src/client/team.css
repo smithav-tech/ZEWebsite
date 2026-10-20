@@ -354,6 +354,23 @@
   }
 }
 
+/* ten field photos: two to a row on phones, five on desktop, so the rows come out even */
+.projects .field-photos {
+  --cols: 2;
+  --gap: 0.75rem;
+  row-gap: var(--gap);
+}
+@media (min-width: 640px) {
+  .projects .field-photos {
+    --gap: 1.2rem;
+  }
+}
+@media (min-width: 1000px) {
+  .projects .field-photos {
+    --cols: 5;
+  }
+}
+
 /* the standalone team page: clear the fixed nav, and a way back home */
 .team-page {
   /* just the fixed nav's height: the section's own --section-y does the rest,

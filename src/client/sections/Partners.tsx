@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowIcon } from "../components/Icons";
 import { contact, partners } from "../content";
 import "../fx/partners.css";
@@ -8,6 +8,9 @@ const TOPICS = [
   ["demo", "A gramCarbon demo", "gramCarbon demo request"],
   ["team", "Talking to the team", "Talk to the ZeroEarth team"],
 ] as const;
+
+/** Window event that pre-selects a topic in the contact form; the detail is a topic id. */
+export const CONTACT_TOPIC = "ze:contact-topic";
 
 /** The partner logos, twice over: the track slides by half its width, so the loop never shows a seam. */
 function LogoTrack() {
@@ -43,6 +46,16 @@ function LogoTrack() {
  */
 function ContactForm() {
   const [topic, setTopic] = useState<(typeof TOPICS)[number][0]>("partner");
+
+  // buttons elsewhere on the page can pre-select what the visitor is asking about
+  useEffect(() => {
+    const onTopic = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (TOPICS.some(([t]) => t === id)) setTopic(id as typeof topic);
+    };
+    window.addEventListener(CONTACT_TOPIC, onTopic);
+    return () => window.removeEventListener(CONTACT_TOPIC, onTopic);
+  }, []);
 
   const send = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -126,6 +139,24 @@ export function Partners() {
               Prefer email? Write to <a href={`mailto:${contact.email}`}>{contact.email}</a> or call{" "}
               <a href={contact.phoneHref}>{contact.phone}</a>.
             </p>
+            <iframe
+              className="contact-map"
+              title="Map of the ZeroEarth office at C-DAC Technopark, Thiruvananthapuram"
+              src={`https://maps.google.com/maps?q=${contact.office.lat},${contact.office.lng}&z=18&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+            {/* the embed's own "Open in Maps" lands on an unnamed spot, so this opens Directions to the office */}
+            <a
+              className="contact-directions"
+              href={`https://www.google.com/maps/dir/?api=1&destination=${contact.office.lat},${contact.office.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Get directions to our office
+              <span className="sr-only"> (opens Google Maps in a new tab)</span>
+            </a>
           </div>
           <ContactForm />
         </div>

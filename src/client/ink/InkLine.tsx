@@ -257,6 +257,18 @@ function readObstacles(pageBox: DOMRect, width: number, pad: number): Box[] {
       // text: its line boxes, so a ragged right edge stays free
       range.selectNodeContents(el);
       rects = [...range.getClientRects()];
+      // ...but not screen-reader text: clipped to nothing on screen, its
+      // unclipped line boxes still run on past the right edge and close the margin lane
+      const hidden: DOMRect[] = [];
+      for (const sr of el.querySelectorAll<HTMLElement>(".sr-only")) {
+        range.selectNodeContents(sr);
+        hidden.push(sr.getBoundingClientRect(), ...range.getClientRects());
+      }
+      if (hidden.length) {
+        const same = (a: DOMRect, b: DOMRect) =>
+          Math.abs(a.left - b.left) < 0.5 && Math.abs(a.top - b.top) < 0.5 && Math.abs(a.right - b.right) < 0.5;
+        rects = rects.filter((r) => !hidden.some((h) => same(r, h)));
+      }
     } else rects = [el.getBoundingClientRect()];
     for (const rect of rects) {
       const l = Math.max(rect.left, 0);
