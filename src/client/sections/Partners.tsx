@@ -12,7 +12,11 @@ const TOPICS = [
 /** Window event that pre-selects a topic in the contact form; the detail is a topic id. */
 export const CONTACT_TOPIC = "ze:contact-topic";
 
-/** The partner logos, twice over: the track slides by half its width, so the loop never shows a seam. */
+/**
+ * The partner logos, twice over: the track slides by half its width, so the
+ * loop never shows a seam. They load eagerly: a lazy image that only moves
+ * into view by the track's transform is fetched late (Safari), leaving gaps.
+ */
 function LogoTrack() {
   const row = (hidden: boolean) => (
     <ul className="marquee-logos" aria-hidden={hidden || undefined}>
@@ -23,7 +27,6 @@ function LogoTrack() {
             alt={hidden ? "" : partner.name}
             width={partner.w}
             height={partner.h}
-            loading="lazy"
             decoding="async"
           />
         </li>

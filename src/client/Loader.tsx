@@ -74,6 +74,19 @@ export function Loader({ onDone }: { onDone: () => void }) {
       const ring = el.querySelector<SVGCircleElement>(".loader__ring-fill")!;
       split = SplitText.create(q(".loader__tagline"), { type: "words,chars" });
       const count = { v: 0 };
+      // the page opens through a growing hole in the middle: the screen, less a
+      // circle (even-odd), a hard-edged shape the browser can clip on the GPU.
+      // The screen is measured once, here: read in every frame of the tween it
+      // would force a layout each time
+      const [w, h] = [window.innerWidth, window.innerHeight];
+      const hole = { r: 0 };
+      const openHole = () => {
+        const r = hole.r;
+        const [cx, cy] = [w / 2, h / 2];
+        el.style.clipPath =
+          `path(evenodd, "M0 0H${w}V${h}H0Z M${(cx - r).toFixed(1)} ${cy} ` +
+          `a${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(2 * r).toFixed(1)} 0 a${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(-2 * r).toFixed(1)} 0Z")`;
+      };
       const progress = () => {
         countEl.textContent = String(Math.round(count.v)).padStart(2, "0");
         ring.style.strokeDashoffset = String(RING_C * (1 - count.v / 100));
@@ -94,12 +107,13 @@ export function Loader({ onDone }: { onDone: () => void }) {
         .to(q(".loader__brand"), { y: -20, opacity: 0, duration: 0.5, ease: "power2.in" }, 2.05)
         .to(q(".loader__caption, .loader__count"), { opacity: 0, duration: 0.4, ease: "power2.in" }, 2.05)
         // a single milk drop falls, hits the sheet, and the page opens from its ripple
-        .fromTo(q(".loader__drop"), { y: -window.innerHeight * 0.6, opacity: 1, scaleY: 1.5, scaleX: 0.8 }, { y: 0, scaleY: 1.25, scaleX: 0.9, duration: 0.55, ease: "power2.in", immediateRender: false }, 2.2)
+        .fromTo(q(".loader__drop"), { y: -h * 0.6, opacity: 1, scaleY: 1.5, scaleX: 0.8 }, { y: 0, scaleY: 1.25, scaleX: 0.9, duration: 0.55, ease: "power2.in", immediateRender: false }, 2.2)
         .to(q(".loader__drop"), { scaleY: 0.2, scaleX: 2.2, opacity: 0, duration: 0.18, ease: "power2.out" })
-        .fromTo(q(".loader__ripple"), { scale: 0.1, opacity: 0.9 }, { scale: 9, opacity: 0, duration: 1.4, ease: "power2.out", stagger: 0.14, immediateRender: false }, 2.75)
+        // the rings are drawn at their final size (loader.css): 1/90 grows to 1, as 120px grew 9x
+        .fromTo(q(".loader__ripple"), { scale: 0.1 / 9, opacity: 0.9 }, { scale: 1, opacity: 0, duration: 1.4, ease: "power2.out", stagger: 0.14, immediateRender: false }, 2.75)
         .call(reveal, [], 2.8)
         .call(unlock, [], 2.8)
-        .to(el, { "--hole": Math.hypot(window.innerWidth, window.innerHeight) * 0.6 + "px", duration: 1.2, ease: "power3.inOut" }, 2.8)
+        .to(hole, { r: Math.hypot(w, h) * 0.6, duration: 1.2, ease: "power3.inOut", onUpdate: openHole }, 2.8)
         .call(onDone);
     };
 

@@ -22,10 +22,31 @@
       rel="stylesheet"
     />
     <!-- the loader's type -->
-    <!-- the loader's paper from the very first frame, before any script runs -->
-    <style>body { background: #fffdf3; }</style>
+    <!-- the loader's paper from the very first frame, before any script runs:
+         the same milk and glows as .loader (loader.css; keep the two in step),
+         so the loader takes over from it without a flash. Pages with no loader
+         get the plain milk. App removes it once the page is on screen. -->
+    <style>
+      body { margin: 0; background: #fffaf6; }
+      #boot {
+        position: fixed;
+        inset: 0;
+        z-index: 101;
+        pointer-events: none;
+        background:
+          radial-gradient(42vmax 34vmax at 12% 8%, rgba(166, 207, 114, 0.2), transparent 70%),
+          radial-gradient(46vmax 38vmax at 92% 96%, rgba(76, 191, 190, 0.18), transparent 70%),
+          radial-gradient(30vmax 26vmax at 50% 46%, #ffffff, transparent 75%),
+          #fffaf6;
+      }
+      #boot.boot--plain { background: #fffaf6; }
+    </style>
   </head>
   <body>
+    <div id="boot" aria-hidden="true"></div>
+    <script>
+      if (location.pathname.replace(/\/+$/, "") !== "") document.getElementById("boot").className = "boot--plain";
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

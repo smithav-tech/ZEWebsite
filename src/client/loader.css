@@ -6,7 +6,6 @@
   --paper: #fffaf6;
   --l-ink: #173c3b;
   --l-muted: #6f7f7c;
-  --hole: 0px;
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -17,8 +16,10 @@
     radial-gradient(46vmax 38vmax at 92% 96%, rgba(76, 191, 190, 0.18), transparent 70%),
     radial-gradient(30vmax 26vmax at 50% 46%, #ffffff, transparent 75%),
     var(--paper);
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 2px));
-  mask-image: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 2px));
+  /* its own layer, so the opening circle (a clip-path set by Loader.tsx) is
+     clipped on the GPU rather than the paper repainted every frame; a
+     gradient mask here was redrawn on the CPU each frame in Safari and stuttered */
+  will-change: transform;
 }
 
 /* the mark over the wordmark and tagline, centred as one group */
@@ -129,17 +130,22 @@
     0 10px 22px -6px rgba(16, 34, 30, 0.35),
     inset -2px -3px 6px rgba(31, 154, 134, 0.18);
   opacity: 0;
+  /* its own layer: moving it never repaints the full-screen paper */
+  will-change: transform, opacity;
 }
+/* drawn at full size and scaled up to it (Loader.tsx), on its own layer, so
+   the rings stay crisp and their growth never repaints the paper behind them */
 .loader__ripple {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 120px;
-  height: 120px;
-  margin: -60px 0 0 -60px;
+  width: 1080px;
+  height: 1080px;
+  margin: -540px 0 0 -540px;
   border-radius: 50%;
   border: 1.5px solid rgba(31, 154, 134, 0.55);
   opacity: 0;
+  will-change: transform, opacity;
 }
 /* nothing shows before the timeline sets it */
 .loader__mark,

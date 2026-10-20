@@ -45,6 +45,8 @@ const POINTER_TRAVEL = 2200;
 const HERO_SCROLL = 0.25;
 /** the hero cow draws itself over this long (s) once the page opens */
 const SELF_DRAW = 2.2;
+/** ...starting this long (s) after the loader starts to open */
+const OPEN_DELAY = 0.8;
 /** every other drawing plays through over this long (s) once the line reaches it */
 const PLAY = 2.4;
 /** a drawing starts as soon as its section's top comes up past this fraction of the screen */
@@ -100,6 +102,12 @@ interface Placed {
   /** the drawing's heading where it starts, so the link arrives along it */
   startDir: Point;
   end: Point;
+  /** beside its copy (desktop), not stacked under it */
+  beside: boolean;
+  /** document y where it starts to count as in view: its section's top beside the copy, its own top stacked */
+  enterY: number;
+  /** document y of the bottom of its box */
+  bottomY: number;
   interactive: boolean;
   glow: boolean;
 }
@@ -304,8 +312,14 @@ export function InkLine() {
     const front: SVGSVGElement = frontEl;
     const page: HTMLElement = pageEl;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    /**
+     * The scroll position and viewport height, kept from the scroll and resize
+     * events: reading them (or any box) in a frame, after the loader or GSAP
+     * has just set styles, forces a layout every frame and stutters on a phone.
+     */
+    const view = { y: window.scrollY, h: window.innerHeight };
 
-    const svg = <K extends keyof SVGElementTagNameMap>(
+    const svg =<K extends keyof SVGElementTagNameMap>(
       tag: K,
       attrs: Record<string, string | number> = {},
       parent?: Element,
@@ -362,6 +376,8 @@ export function InkLine() {
     /* ── layout: measure the boxes and rebuild every path ─────────────────── */
     function layout() {
       const pageBox = page.getBoundingClientRect();
+      view.y = window.scrollY;
+      view.h = window.innerHeight;
       // the page's own box: its scroll size would include these SVGs, which
       // would then never shrink when the window does
       const width = page.clientWidth;
@@ -402,6 +418,9 @@ export function InkLine() {
           start: map(+first[1], +first[2]),
           startDir: [c1x - +first[1], c1y - +first[2]] as Point,
           end: map(+last[1], +last[2]),
+          beside,
+          enterY: ((beside && box.closest("section")) || box).getBoundingClientRect().top + view.y,
+          bottomY: r.bottom + view.y,
           interactive: box.dataset.interactive === "1",
           glow: box.dataset.glow === "1",
         };
@@ -574,16 +593,20 @@ export function InkLine() {
       if (!p) plays.set(box, (p = { f: 0, on: false }));
       return p;
     };
-    /** a drawing's section has started to come into view (its top is above ENTER of the screen) */
-    const entered = (box: HTMLElement) =>
-      (box.closest("section") ?? box).getBoundingClientRect().top <= window.innerHeight * ENTER;
+    /**
+     * A drawing has started to come into view: beside its copy, when its
+     * section's top is above ENTER of the screen; stacked under the copy (a
+     * phone), when its own top is, or it would play out of sight while the
+     * copy above it is read. From positions measured in layout(), never a box.
+     */
+    const entered = ({ enterY }: Placed) => enterY - view.y <= view.h * ENTER;
     function target() {
-      const head = window.scrollY + window.innerHeight * HEAD;
+      const head = view.y + view.h * HEAD;
       // scrolled back above a drawing: it plays again from the start next time
       for (const piece of line.pieces) {
         if (piece.kind !== "scene" || piece.placed.interactive) continue;
         const p = playOf(piece.placed.box);
-        if (p.on && !entered(piece.placed.box)) {
+        if (p.on && !entered(piece.placed)) {
           gsap.killTweensOf(p);
           p.f = 0;
           p.on = false;
@@ -598,23 +621,23 @@ export function InkLine() {
           f = 1;
         } else if (piece.placed.interactive) {
           // back at the very top after scrolling away: the cow starts over
-          if (window.scrollY <= 2 && line.away) {
+          if (view.y <= 2 && line.away) {
             line.pointer = 0;
             line.lastX = null;
             line.away = false;
             if (selfDraws) selfDraw();
           }
-          if (window.scrollY > 40) line.away = true;
-          f = Math.max(window.scrollY / (window.innerHeight * HERO_SCROLL), line.pointer);
+          if (view.y > 40) line.away = true;
+          f = Math.max(view.y / (view.h * HERO_SCROLL), line.pointer);
         } else {
           // the line has reached the drawing and its section is in view: it plays straight through
           const p = playOf(piece.placed.box);
-          if (!p.on && entered(piece.placed.box)) {
+          if (!p.on && entered(piece.placed)) {
             p.on = true;
             gsap.to(p, { f: 1, duration: PLAY, ease: "power1.inOut", onUpdate: requestDraw });
           }
           // scrolled on past it (a jump down the page): it is done, so the line runs on
-          if (p.f < 1 && piece.placed.box.getBoundingClientRect().bottom + window.scrollY < head) {
+          if (p.f < 1 && piece.placed.bottomY < head) {
             gsap.killTweensOf(p);
             p.f = 1;
           }
@@ -663,13 +686,15 @@ export function InkLine() {
     // the cow draws itself once the page opens, and again on each return to the
     // top, so it is never left half-drawn waiting for the pointer to move
     const selfDraws = !still;
-    function selfDraw() {
+    function selfDraw(delay = 0.3) {
       gsap.killTweensOf(line);
-      gsap.to(line, { pointer: 1, duration: SELF_DRAW, delay: 0.3, ease: "power1.inOut", onUpdate: requestDraw });
+      gsap.to(line, { pointer: 1, duration: SELF_DRAW, delay, ease: "power1.inOut", onUpdate: requestDraw });
     }
+    // on the reveal, once the loader's circle is mostly open (it opens over
+    // 1.2 s), so the two never compete for the same frames on a phone
     const stopWaiting = whenRevealed(() => {
       pointerLive = true;
-      if (selfDraws) selfDraw();
+      if (selfDraws) selfDraw(OPEN_DELAY);
     });
     const onPointerMove = (e: PointerEvent) => {
       if (!pointerLive || line.pointer >= 1) return;
@@ -700,10 +725,20 @@ export function InkLine() {
         layout();
       });
     };
+    // the view is read here, in the events, and only used in the frames
+    const onScroll = () => {
+      view.y = window.scrollY;
+      requestDraw();
+    };
+    const onResize = () => {
+      view.h = window.innerHeight;
+      requestLayout();
+      requestDraw();
+    };
     const resizes = new ResizeObserver(requestLayout);
     resizes.observe(page);
-    window.addEventListener("resize", requestLayout);
-    window.addEventListener("scroll", requestDraw, { passive: true });
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, { passive: true });
     if (!still) window.addEventListener("pointermove", onPointerMove, { passive: true });
     laidOut = pageSize();
     layout();
@@ -717,8 +752,8 @@ export function InkLine() {
       resizes.disconnect();
       cancelAnimationFrame(drawFrame);
       cancelAnimationFrame(layoutFrame);
-      window.removeEventListener("resize", requestLayout);
-      window.removeEventListener("scroll", requestDraw);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointermove", onPointerMove);
       back.replaceChildren();
       front.replaceChildren();

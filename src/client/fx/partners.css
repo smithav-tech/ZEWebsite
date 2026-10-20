@@ -34,12 +34,15 @@
   display: grid;
   place-items: center;
 }
+/* a set height, so each logo's width comes from its width and height
+   attributes before the file arrives and the track never jumps as they load */
 .marquee-logos img {
   width: auto;
-  height: auto;
-  max-height: clamp(60px, 6.4vw, 92px);
+  height: clamp(60px, 6.4vw, 92px);
   max-width: clamp(150px, 16vw, 230px);
   object-fit: contain;
+  /* some logos are on white: multiply melts the white into the milk */
+  mix-blend-mode: multiply;
   transition: transform 0.3s;
 }
 .marquee-logos li:hover img {

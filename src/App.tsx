@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader } from "./client/Loader";
 import { ClientSite } from "./client/ClientSite";
 import { ProjectsPage, TeamPage } from "./client/TeamPage";
@@ -29,6 +29,12 @@ export default function App() {
     setLoaded(true);
   }, []);
 
+  // the page (and the loader over it) is on screen: the static boot paper in
+  // index.html, which covered the wait for this script, can go
+  useEffect(() => {
+    document.getElementById("boot")?.remove();
+  }, []);
+
   useEffect(() => {
     document.title = isTeam ? TEAM_TITLE : isProjects ? PROJECTS_TITLE : HOME_TITLE;
   }, [isTeam, isProjects]);
@@ -43,12 +49,16 @@ export default function App() {
     }
   }, [loaded]);
 
+  // the site renders once: the loader finishing must not re-render the whole
+  // page in the frame the circle finishes opening
+  const site = useMemo(() => <ClientSite />, []);
+
   if (isTeam) return <TeamPage />;
   if (isProjects) return <ProjectsPage />;
   return (
     <>
       {loaded ? null : <Loader onDone={onDone} />}
-      <ClientSite />
+      {site}
     </>
   );
 }

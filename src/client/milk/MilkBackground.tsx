@@ -67,18 +67,33 @@ export function MilkBackground() {
     };
     const edgeWave = (strength: number) => impulse(-100, Math.random(), seconds(), strength);
 
+    // Setting a canvas's size clears it, and with no alpha a cleared canvas is
+    // black until the next frame: only resize when the size really changes,
+    // keep the taller buffer when just the height moves at the same width (a
+    // phone's address bar showing or hiding as you scroll), and paint at once.
+    // the scroll position and viewport height, kept from their events: read
+    // in a frame, after the loader or GSAP has just set styles, they force a
+    // layout every frame
+    const view = { y: window.scrollY, h: window.innerHeight };
+    const onScroll = () => (view.y = window.scrollY);
+
     const resize = () => {
+      view.h = window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.round(window.innerWidth * dpr * RESOLUTION));
-      canvas.height = Math.max(1, Math.round(window.innerHeight * dpr * RESOLUTION));
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      if (still) frame();
+      const width = Math.max(1, Math.round(window.innerWidth * dpr * RESOLUTION));
+      let height = Math.max(1, Math.round(window.innerHeight * dpr * RESOLUTION));
+      if (width === canvas.width) height = Math.max(height, canvas.height);
+      if (width === canvas.width && height === canvas.height) return;
+      canvas.width = width;
+      canvas.height = height;
+      gl.viewport(0, 0, width, height);
+      paint();
     };
 
     // positions in screen units: 1 = the viewport height
     const pointer = { x: 0.5, y: 0.5, press: 0, target: 0, lastX: 0, lastY: 0, lastT: 0 };
-    const scroll = { y: window.scrollY, travelled: 0, lastWave: 0 };
-    const toScreen = (e: PointerEvent) => [e.clientX / window.innerHeight, e.clientY / window.innerHeight];
+    const scroll = { y: view.y, travelled: 0, lastWave: 0 };
+    const toScreen = (e: PointerEvent) => [e.clientX / view.h, e.clientY / view.h];
 
     const onMove = (e: PointerEvent) => {
       const [x, y] = toScreen(e);
@@ -110,7 +125,7 @@ export function MilkBackground() {
       lastT = t;
       pointer.press += (pointer.target - pointer.press) * Math.min(1, dt * 6);
       if (!still) {
-        const y = window.scrollY;
+        const y = view.y;
         const moved = Math.abs(y - scroll.y);
         const speed = moved / Math.max(dt, 1 / 120);
         scroll.y = y;
@@ -121,17 +136,25 @@ export function MilkBackground() {
           edgeWave(Math.min(0.85, 0.3 + speed / 5000));
         }
       }
-      gl!.uniform2f(uRes, canvas!.width, canvas!.height);
       gl!.uniform1f(uTime, t);
-      gl!.uniform1f(uScroll, window.scrollY / window.innerHeight);
+      gl!.uniform1f(uScroll, view.y / view.h);
       gl!.uniform4fv(uImp, impulses);
-      gl!.uniform3f(uPointer, pointer.x, pointer.y, pointer.press);
-      gl!.drawArrays(gl!.TRIANGLES, 0, 3);
+      paint();
       if (!still) raf = requestAnimationFrame(frame);
     }
+    /** draw the current state now, without advancing time or scheduling another frame */
+    function paint() {
+      gl!.uniform2f(uRes, canvas!.width, canvas!.height);
+      gl!.uniform3f(uPointer, pointer.x, pointer.y, pointer.press);
+      gl!.drawArrays(gl!.TRIANGLES, 0, 3);
+    }
 
+    // size the canvas and draw the first frame now, in this task (the frame
+    // schedules the next), so the browser never shows its blank black buffer
     resize();
+    frame();
     window.addEventListener("resize", resize);
+    window.addEventListener("scroll", onScroll, { passive: true });
     let openingWave = 0;
     let stopWaiting = () => {};
     if (still) {
@@ -144,7 +167,6 @@ export function MilkBackground() {
       stopWaiting = whenRevealed(() => {
         openingWave = window.setTimeout(() => edgeWave(0.75), OPENING_WAVE_DELAY);
       });
-      raf = requestAnimationFrame(frame);
     }
     document.documentElement.classList.add("milk-on");
 
@@ -157,6 +179,7 @@ export function MilkBackground() {
       window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("scroll", frame);
+      window.removeEventListener("scroll", onScroll);
       document.documentElement.classList.remove("milk-on");
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
