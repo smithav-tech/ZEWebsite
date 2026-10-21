@@ -30,11 +30,21 @@ const vec3 CREAM   = vec3(0.968, 0.930, 0.880);  // #F7EDE0 the creamy band wher
 const vec3 DEEP    = vec3(0.905, 0.902, 0.905);  // #E7E6E7 the hollows, a touch occluded
 const vec3 SKY     = vec3(0.955, 0.962, 0.975);  // #F4F5F9 the room, reflected at grazing angles
 
+// screen-space noise for the dither only: it needn't agree between pixels
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+// the noise lattice hash: whole numbers only (all exact in a float), so two cells
+// always agree on the corner they share. A fract-of-a-big-product hash breaks
+// there on Intel Macs (Metal rounds the neighbours differently) and the milk
+// shows as square tiles with hard seams.
+float permute(float x) { return mod((x * 34.0 + 1.0) * x, 289.0); }
+float lattice(vec2 i) {
+  i = mod(i, 289.0);
+  return fract(permute(permute(i.x) + i.y) / 289.0);
+}
 float noise(vec2 p) {
   vec2 i = floor(p), f = fract(p);
   vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0); // quintic: smooth normals, no grid in the sheen
-  return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
+  return mix(mix(lattice(i), lattice(i + vec2(1, 0)), u.x), mix(lattice(i + vec2(0, 1)), lattice(i + vec2(1, 1)), u.x), u.y);
 }
 
 // height of the milk surface. p = world position (drifts with scroll), s = screen position

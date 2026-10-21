@@ -4,6 +4,13 @@ import { FRAGMENT, IMPULSE_SLOTS, VERTEX } from "./shaders";
 
 /** the canvas renders at half the (capped) device resolution: the milk is soft anyway */
 const RESOLUTION = 0.5;
+/** where it steps down to while frames run slow (Safari on a Retina Intel Mac) */
+const FALLBACK_RESOLUTIONS = [0.35, 0.25];
+/** frames averaged per check, and the average frame time (ms) that counts as slow */
+const SAMPLE_FRAMES = 40;
+const SLOW_FRAME = 22;
+/** start checking this long after the page opens, once the loader has finished */
+const SAMPLE_DELAY = 1500;
 /** scroll distance (px) that sends in another edge wave */
 const SCROLL_PER_WAVE = 260;
 /** and at most one every this many seconds */
@@ -77,11 +84,12 @@ export function MilkBackground() {
     const view = { y: window.scrollY, h: window.innerHeight };
     const onScroll = () => (view.y = window.scrollY);
 
+    let resolution = RESOLUTION;
     const resize = () => {
       view.h = window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = Math.max(1, Math.round(window.innerWidth * dpr * RESOLUTION));
-      let height = Math.max(1, Math.round(window.innerHeight * dpr * RESOLUTION));
+      const width = Math.max(1, Math.round(window.innerWidth * dpr * resolution));
+      let height = Math.max(1, Math.round(window.innerHeight * dpr * resolution));
       if (width === canvas.width) height = Math.max(height, canvas.height);
       if (width === canvas.width && height === canvas.height) return;
       canvas.width = width;
@@ -117,9 +125,25 @@ export function MilkBackground() {
     };
     const onUp = () => (pointer.target = 0);
 
+    // time a run of frames; while they're slow, render fewer pixels and check again
+    const sample = { on: false, frames: 0, start: 0, step: 0 };
+    function checkSpeed() {
+      if (sample.frames === 0) sample.start = performance.now();
+      else if (sample.frames === SAMPLE_FRAMES) {
+        const average = (performance.now() - sample.start) / SAMPLE_FRAMES;
+        if (average > SLOW_FRAME && sample.step < FALLBACK_RESOLUTIONS.length) {
+          resolution = FALLBACK_RESOLUTIONS[sample.step++];
+          resize();
+          sample.frames = -1;
+        } else sample.on = false;
+      }
+      sample.frames++;
+    }
+
     let raf = 0;
     let lastT = seconds();
     function frame() {
+      if (sample.on) checkSpeed();
       const t = still ? 3 : seconds();
       const dt = Math.min(0.05, t - lastT);
       lastT = t;
@@ -156,6 +180,7 @@ export function MilkBackground() {
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", onScroll, { passive: true });
     let openingWave = 0;
+    let startSampling = 0;
     let stopWaiting = () => {};
     if (still) {
       window.addEventListener("scroll", frame, { passive: true });
@@ -166,6 +191,7 @@ export function MilkBackground() {
       // the opening wave rolls in as the loader's ripple opens onto the page
       stopWaiting = whenRevealed(() => {
         openingWave = window.setTimeout(() => edgeWave(0.75), OPENING_WAVE_DELAY);
+        startSampling = window.setTimeout(() => (sample.on = true), SAMPLE_DELAY);
       });
     }
     document.documentElement.classList.add("milk-on");
@@ -173,6 +199,7 @@ export function MilkBackground() {
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(openingWave);
+      clearTimeout(startSampling);
       stopWaiting();
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onMove);
