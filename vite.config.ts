@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { mediaVersions } from "./scripts/media-versions.mjs";
 
 /**
  * The bundle in parts that change at different rates, so a deploy that only
@@ -15,6 +16,8 @@ function chunk(id: string) {
 
 export default defineConfig({
   plugins: [react()],
+  // every image URL carries its file's hash (content.ts), so a replaced photo is never shown from a cache
+  define: { __MEDIA_VERSIONS__: JSON.stringify(mediaVersions()) },
   server: { port: 5180 },
   build: {
     rollupOptions: {

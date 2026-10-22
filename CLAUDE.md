@@ -22,7 +22,7 @@ There are no unit tests. Check changes with `pnpm build` (for types) and in the 
 | `src/client/router.ts` | A small history-API router with no library |
 | `src/client/ClientSite.tsx` | The home page, section by section, in order |
 | `src/client/sections/` | One component per section. `Scene.tsx` is the shared chapter layout (copy plus doodle) |
-| `src/client/content.ts` | Team, advisors, projects, partners and contact details. Edit copy data here |
+| `src/client/content.ts` | Team, advisors, projects, partners and contact details. Edit copy data here. Image paths go through `media()`, which adds the file's content hash (`scripts/media-versions.mjs`) so a replaced photo is never shown from a browser's cache |
 | `src/client/ink/InkLine.tsx` | The page-long line: layout, links between drawings, and the draw-on animation |
 | `src/client/ink/route.ts`, `stitch.ts` | How the links route around copy and headlines, and how the hero title joins the cow |
 | `src/client/ink/scenes.ts` | The drawings in page order, plus labels (CH₄, LESS) and the finale logo hand-over |
