@@ -1,4 +1,4 @@
-import { blocked, keepsClear, pathData, route, samplePath, turn, unit, type Box, type Headline, type Vec, type Waypoint } from "./route";
+import { blocked, clearOf, keepsClear, pathData, route, samplePath, turn, unit, type Box, type Headline, type Vec, type Waypoint } from "./route";
 
 /**
  * The hero's first stroke. The line begins as the tail of the last letter of
@@ -53,6 +53,7 @@ export function heroStitch(
       ways.push([{ p, dir: unit(inDir[0] + outDir[0], Math.max(0.2, inDir[1] + outDir[1])) }]);
     }
   }
+  const offDrawing = clearOf(drawing, stroke * 2.5);
   let best: { cost: number; points: Waypoint[] } | null = null;
   for (const via of ways) {
     const points = [...legs, ...via, end];
@@ -61,7 +62,7 @@ export function heroStitch(
       if (blocked(points[i], points[i + 1], all, width)) clear = false;
     }
     if (!clear) continue;
-    const cost = length(points) + sharpest(points) * em * 2 + (keepsClear(points, drawing, stroke * 2.5, stroke * 18) ? 0 : 1e5);
+    const cost = length(points) + sharpest(points) * em * 2 + (keepsClear(points, offDrawing, stroke * 18) ? 0 : 1e5);
     if (!best || cost < best.cost) best = { cost, points };
   }
   if (best) return best.points;

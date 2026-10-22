@@ -11,6 +11,16 @@ const SAMPLE_FRAMES = 40;
 const SLOW_FRAME = 22;
 /** start checking this long after the page opens, once the loader has finished */
 const SAMPLE_DELAY = 1500;
+/** the most one frame may cost (ms of GPU time, measured at boot at RESOLUTION)
+ *  before it starts at a lower fallback resolution: about a third of a 60fps
+ *  frame, leaving the rest for the page, the ink line and the compositor */
+const BOOT_BUDGET = 6;
+/** timed draws at boot, after one warm-up draw that absorbs the shader's first-use cost */
+const BOOT_DRAWS = 3;
+/** last resort, when even the lowest resolution runs slow: draw the milk on every
+ *  other animation frame (about 30fps). time still comes from the clock, so
+ *  the motion keeps its speed and only the frame rate drops */
+const SLOW_FRAME_SKIP = 2;
 /** scroll distance (px) that sends in another edge wave */
 const SCROLL_PER_WAVE = 260;
 /** and at most one every this many seconds */
@@ -127,6 +137,7 @@ export function MilkBackground() {
 
     // time a run of frames; while they're slow, render fewer pixels and check again
     const sample = { on: false, frames: 0, start: 0, step: 0 };
+    let skip = 0; // frames to wait between draws (1 = every frame); see SLOW_FRAME_SKIP
     function checkSpeed() {
       if (sample.frames === 0) sample.start = performance.now();
       else if (sample.frames === SAMPLE_FRAMES) {
@@ -135,14 +146,23 @@ export function MilkBackground() {
           resolution = FALLBACK_RESOLUTIONS[sample.step++];
           resize();
           sample.frames = -1;
-        } else sample.on = false;
+        } else {
+          if (average > SLOW_FRAME) skip = SLOW_FRAME_SKIP;
+          sample.on = false;
+        }
       }
       sample.frames++;
     }
 
     let raf = 0;
+    let running = false; // the animation loop waits for the reveal; the loader covers the milk until then
+    let tick = 0;
     let lastT = seconds();
     function frame() {
+      if (skip && running && tick++ % skip) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
       if (sample.on) checkSpeed();
       const t = still ? 3 : seconds();
       const dt = Math.min(0.05, t - lastT);
@@ -164,7 +184,7 @@ export function MilkBackground() {
       gl!.uniform1f(uScroll, view.y / view.h);
       gl!.uniform4fv(uImp, impulses);
       paint();
-      if (!still) raf = requestAnimationFrame(frame);
+      if (!still && running) raf = requestAnimationFrame(frame);
     }
     /** draw the current state now, without advancing time or scheduling another frame */
     function paint() {
@@ -173,9 +193,37 @@ export function MilkBackground() {
       gl!.drawArrays(gl!.TRIANGLES, 0, 3);
     }
 
-    // size the canvas and draw the first frame now, in this task (the frame
-    // schedules the next), so the browser never shows its blank black buffer
+    /** time a few draws (each forced to finish by reading a pixel back) and, if they
+     *  are over budget, start at the first fallback resolution that should fit:
+     *  cost follows the pixel count, so it goes with the resolution squared */
+    function pickResolution() {
+      const done = new Uint8Array(4);
+      const finish = () => gl!.readPixels(0, 0, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, done);
+      paint();
+      finish();
+      const start = performance.now();
+      for (let i = 0; i < BOOT_DRAWS; i++) {
+        paint();
+        finish();
+      }
+      const cost = (performance.now() - start) / BOOT_DRAWS;
+      if (cost <= BOOT_BUDGET) return;
+      let step = 0;
+      while (step < FALLBACK_RESOLUTIONS.length) {
+        const fits = cost * (FALLBACK_RESOLUTIONS[step] / RESOLUTION) ** 2 <= BOOT_BUDGET;
+        step++;
+        if (fits) break;
+      }
+      sample.step = step;
+      resolution = FALLBACK_RESOLUTIONS[step - 1];
+      resize();
+    }
+
+    // size the canvas, pick the resolution, and draw the first frame now, in
+    // this task, so the browser never shows its blank black buffer. the loop
+    // itself starts at the reveal
     resize();
+    if (!still) pickResolution();
     frame();
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -190,6 +238,10 @@ export function MilkBackground() {
       window.addEventListener("pointerup", onUp, { passive: true });
       // the opening wave rolls in as the loader's ripple opens onto the page
       stopWaiting = whenRevealed(() => {
+        lastT = seconds();
+        scroll.y = view.y;
+        running = true;
+        raf = requestAnimationFrame(frame);
         openingWave = window.setTimeout(() => edgeWave(0.75), OPENING_WAVE_DELAY);
         startSampling = window.setTimeout(() => (sample.on = true), SAMPLE_DELAY);
       });

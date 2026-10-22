@@ -147,6 +147,16 @@
   opacity: 0;
   will-change: transform, opacity;
 }
+/* each animated group gets its own small layer, so its per-frame changes (and
+   the count's text, which changes every frame) never repaint the gradient paper */
+.loader__mark,
+.loader__brand {
+  will-change: transform, opacity;
+}
+.loader__caption,
+.loader__count {
+  will-change: opacity;
+}
 /* nothing shows before the timeline sets it */
 .loader__mark,
 .loader__brand,

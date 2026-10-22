@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { brand } from "../content";
-import { whenRevealed } from "../reveal";
-import { pathData, route, samplePath, type Box, type Headline, type Letter } from "./route";
+import { isRevealed, markInkReady, whenRevealed } from "../reveal";
+import { parsePath, pathData, route, sampleCurve, segmentLengths, type Box, type Headline, type Letter } from "./route";
 import { SCENES, type SceneName } from "./scenes";
 import { heroStitch } from "./stitch";
 import type { InkScene } from "./types";
@@ -30,8 +30,12 @@ import type { InkScene } from "./types";
  *   waits there. A drawing scrolled right past counts as done. The hero cow
  *   draws itself once the page opens (pointer travel or the first
  *   quarter-screen of scroll can finish it sooner).
- * - Drawing: the shown length eases toward that target each frame, and each
- *   path reveals its share through stroke-dashoffset. Labels fade in at their
+ * - Drawing: the shown length eases toward that target each frame. Each piece
+ *   is cut into short chunks: the chunks behind the pen are plain strokes, the
+ *   ones ahead are hidden, and only the one under the pen reveals its share
+ *   through stroke-dashoffset, so a frame repaints a few pixels of line, not
+ *   a whole drawing (dashing a long path is slow on an old laptop). Only the
+ *   chunks near a headline get the front copies. Labels fade in at their
  *   fraction of the stroke; the last scene can glow; the finale swaps the
  *   drawn wordmark for the logo image.
  * Reduced motion: everything is drawn at once and the pointer is ignored.
@@ -73,20 +77,38 @@ const GRADIENT_STOPS: [string, string][] = [
   ["1", "#3dbbc9"],
 ];
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-const NUM = String.raw`(-?\d*\.?\d+)`;
-const ANY_POINT = new RegExp(`${NUM},${NUM}`, "g");
-const FIRST_POINT = new RegExp(`^M${NUM},${NUM}`);
-const LAST_POINT = new RegExp(`${NUM},${NUM}$`);
-const FIRST_CONTROL = new RegExp(`^M${NUM},${NUM} C${NUM},${NUM}`);
+/** the length of line (px) in each chunk */
+const CHUNK = 160;
 
-/** a scene's path without its first `lead` segments, starting where they end */
-function dropLead(d: string, lead: number) {
-  const segments = d.split(" C").slice(1);
-  if (lead >= segments.length) return d;
-  const from = segments[lead - 1].trim().split(" ").pop();
-  return `M${from} C${segments.slice(lead).join(" C")}`;
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** a run of line: the M point then six numbers per C segment (as parsePath), and each segment's length */
+interface Run {
+  nums: number[];
+  lengths: number[];
 }
+
+/** each scene parsed once, in its own units: whole, and without its lead-in */
+const runs = new WeakMap<InkScene, Map<number, Run>>();
+function sceneRun(scene: InkScene, lead: number): Run {
+  let byLead = runs.get(scene);
+  if (!byLead) runs.set(scene, (byLead = new Map()));
+  let run = byLead.get(lead);
+  if (!run) {
+    const whole = lead ? sceneRun(scene, 0) : null;
+    if (!whole) {
+      const nums = parsePath(scene.d);
+      run = { nums, lengths: segmentLengths(nums) };
+    } else if (lead >= whole.lengths.length) run = whole;
+    // without its first `lead` segments, starting where they end
+    else run = { nums: whole.nums.slice(lead * 6), lengths: whole.lengths.slice(lead) };
+    byLead.set(lead, run);
+  }
+  return run;
+}
+
+/** to a tenth of a pixel, as the path data is written */
+const tenth = (v: number) => Math.round(v * 10) / 10;
 
 type Point = [number, number];
 
@@ -97,7 +119,8 @@ interface Placed {
   scale: number;
   /** scene units to page coordinates */
   map: (x: number, y: number) => Point;
-  d: string;
+  /** the drawing in page coordinates */
+  run: Run;
   start: Point;
   /** the drawing's heading where it starts, so the link arrives along it */
   startDir: Point;
@@ -106,17 +129,35 @@ interface Placed {
   beside: boolean;
   /** document y where it starts to count as in view: its section's top beside the copy, its own top stacked */
   enterY: number;
-  /** document y of the bottom of its box */
+  /** document y of the top and bottom of its box */
+  topY: number;
   bottomY: number;
   interactive: boolean;
   glow: boolean;
 }
 
+const HIDDEN = 0;
+const PART = 1;
+const FULL = 2;
+
+/** a short stretch of a piece, drawn on its own */
+interface Chunk {
+  /** the black line, then the copies in front of the headlines (none away from them) */
+  paths: SVGPathElement[];
+  /** where it starts along its piece */
+  at: number;
+  length: number;
+  state: typeof HIDDEN | typeof PART | typeof FULL;
+  /** length revealed while PART */
+  drawn: number;
+}
+
 interface Stroke {
-  back: SVGPathElement;
-  /** the copies in front of the headlines: gradient over dark glyphs, ink over gradient ones */
-  front: SVGPathElement[];
+  /** the piece's chunks, grouped: the back group, then the front ones if any chunk needs them */
+  groups: SVGGElement[];
+  chunks: Chunk[];
   glow: SVGPathElement | null;
+  glowOn: boolean;
   length: number;
   /** where this piece starts along the whole line */
   offset: number;
@@ -130,11 +171,12 @@ interface Reveal {
   el: SVGElement;
   /** line length at which it shows */
   at: number;
+  on: boolean;
 }
 
 interface Finale extends Reveal {
   /** the strokes that fade out as the logo arrives: the drawn wordmark (the link stays, ending in the logo) */
-  handover: SVGPathElement[];
+  handover: SVGGElement[];
 }
 
 /** a headline word, re-set as SVG text for the glyph clips */
@@ -150,7 +192,7 @@ interface ClipWord {
 }
 
 /** a big headline: its letters (for routing) and words (for the clips), in page coordinates */
-function readHeadline(el: HTMLElement, pageBox: DOMRect, measure: CanvasRenderingContext2D) {
+function readHeadline(el: HTMLElement, pageBox: DOMRect, measure: CanvasRenderingContext2D, glyphs: Map<string, TextMetrics>) {
   const letters: Letter[] = [];
   const words: ClipWord[] = [];
   const range = document.createRange();
@@ -191,7 +233,10 @@ function readHeadline(el: HTMLElement, pageBox: DOMRect, measure: CanvasRenderin
         range.setEnd(node, match.index + i + 1);
         const r = range.getClientRects()[0];
         if (!r) continue;
-        const glyph = measure.measureText(text[i]);
+        // a headline repeats its letters: measure each once per font
+        const key = `${measure.font}|${text[i]}`;
+        let glyph = glyphs.get(key);
+        if (!glyph) glyphs.set(key, (glyph = measure.measureText(text[i])));
         const l = r.left - pageBox.left;
         letters.push({
           ch: text[i],
@@ -374,6 +419,8 @@ export function InkLine() {
     };
 
     /* ── layout: measure the boxes and rebuild every path ─────────────────── */
+    // Every read comes first and every write after, and the lengths are worked
+    // out rather than measured: so the page lays out once, after, not once per path.
     function layout() {
       const pageBox = page.getBoundingClientRect();
       view.y = window.scrollY;
@@ -382,15 +429,9 @@ export function InkLine() {
       // would then never shrink when the window does
       const width = page.clientWidth;
       const height = page.clientHeight;
-      for (const el of [back, front]) {
-        el.setAttribute("width", String(width));
-        el.setAttribute("height", String(height));
-        el.setAttribute("viewBox", `0 0 ${width} ${height}`);
-      }
-
       // the gradient repeats every button-width, so a crossing reads like the CTA
       const button = document.querySelector(".nav-cta, .btn");
-      gradient.setAttribute("x2", Math.max(120, button ? button.getBoundingClientRect().width : 170).toFixed(0));
+      const buttonWidth = button ? button.getBoundingClientRect().width : 170;
 
       const placed: Placed[] = [...document.querySelectorAll<HTMLElement>(".doodle-box")].map((box) => {
         const scene: InkScene = SCENES[box.dataset.scene as SceneName];
@@ -401,25 +442,21 @@ export function InkLine() {
         const map = (x: number, y: number): Point => [left + x * scale, top + y * scale];
         // beside the copy, the link joins the drawing where its lead-in ends
         const beside = r.left - pageBox.left > width * 0.3;
-        const own = scene.lead && beside ? dropLead(scene.d, scene.lead) : scene.d;
-        const d = own.replace(ANY_POINT, (_, x: string, y: string) => {
-          const [px, py] = map(+x, +y);
-          return `${px.toFixed(1)},${py.toFixed(1)}`;
-        });
-        const first = own.match(FIRST_POINT)!;
-        const last = own.match(LAST_POINT)!;
-        const [, , c1x, c1y] = own.match(FIRST_CONTROL)!.slice(1).map(Number);
+        const own = sceneRun(scene, scene.lead && beside ? scene.lead : 0);
+        const nums = own.nums.map((v, k) => tenth(k % 2 ? top + v * scale : left + v * scale));
+        const n = own.nums.length;
         return {
           box,
           scene,
           scale,
           map,
-          d,
-          start: map(+first[1], +first[2]),
-          startDir: [c1x - +first[1], c1y - +first[2]] as Point,
-          end: map(+last[1], +last[2]),
+          run: { nums, lengths: own.lengths.map((l) => l * scale) },
+          start: map(own.nums[0], own.nums[1]),
+          startDir: [own.nums[2] - own.nums[0], own.nums[3] - own.nums[1]] as Point,
+          end: map(own.nums[n - 2], own.nums[n - 1]),
           beside,
           enterY: ((beside && box.closest("section")) || box).getBoundingClientRect().top + view.y,
+          topY: r.top + view.y,
           bottomY: r.bottom + view.y,
           interactive: box.dataset.interactive === "1",
           glow: box.dataset.glow === "1",
@@ -432,6 +469,30 @@ export function InkLine() {
         STROKE_MAX,
         Math.max(STROKE_MIN, parseFloat(getComputedStyle(bodyText).fontSize) * STROKE_EM),
       );
+
+      // the headlines, letter by letter, and what the links keep clear of
+      const measure = document.createElement("canvas").getContext("2d")!;
+      const glyphs = new Map<string, TextMetrics>();
+      const headlines = [...document.querySelectorAll<HTMLElement>(HEADLINES)].map((el) =>
+        readHeadline(el, pageBox, measure, glyphs),
+      );
+      const obstacles = readObstacles(pageBox, width, Math.max(8, stroke * 3));
+      // the links go round the headlines, never through them: each line of a headline, padded like the copy
+      const headlineLines = headlines.flatMap((h) => headlineRows(h, Math.max(8, stroke * 3)));
+      const follows = (a: Node, b: Node) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+      // where the front copies can show: round each headline, with room for glyphs that overhang it
+      const glyphZones = headlines.map(({ box, em }) => {
+        const pad = em * 0.35 + stroke * 2;
+        return { l: box.l - pad, r: box.r + pad, t: box.t - pad, b: box.b + pad };
+      });
+
+      /* writes from here on */
+      for (const el of [back, front]) {
+        el.setAttribute("width", String(width));
+        el.setAttribute("height", String(height));
+        el.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      }
+      gradient.setAttribute("x2", Math.max(120, buttonWidth).toFixed(0));
       backLayer.setAttribute("stroke-width", stroke.toFixed(2));
       frontLayer.setAttribute("stroke-width", (stroke * 1.25).toFixed(2));
       frontInkLayer.setAttribute("stroke-width", stroke.toFixed(2));
@@ -440,36 +501,59 @@ export function InkLine() {
       for (const el of [back, front]) el.style.setProperty("--ink-w", `${stroke.toFixed(2)}px`);
       for (const layer of [backLayer, frontLayer, frontInkLayer, glowLayer]) layer.replaceChildren();
 
-      // the headlines, letter by letter, and what the links keep clear of
-      const measure = document.createElement("canvas").getContext("2d")!;
-      const headlines = [...document.querySelectorAll<HTMLElement>(HEADLINES)].map((el) =>
-        readHeadline(el, pageBox, measure),
-      );
-      const obstacles = readObstacles(pageBox, width, Math.max(8, stroke * 3));
-      // the links go round the headlines, never through them: each line of a headline, padded like the copy
-      const headlineLines = headlines.flatMap((h) => headlineRows(h, Math.max(8, stroke * 3)));
-      const follows = (a: Node, b: Node) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
-
       const pieces: Piece[] = [];
       let offset = 0;
-      const addStroke = (d: string, withGlow: boolean): Stroke => {
-        const backPath = svg("path", { d }, backLayer);
-        const front = [svg("path", { d }, frontLayer), svg("path", { d }, frontInkLayer)];
-        const length = backPath.getTotalLength();
-        for (const p of [backPath, ...front]) {
-          p.style.strokeDasharray = `${length + 1} ${length + 1}`;
-          p.style.strokeDashoffset = `${length + 1}`;
+      const addStroke = ({ nums, lengths }: Run, withGlow: boolean): Stroke => {
+        const backGroup = svg("g", {}, backLayer);
+        let frontGroups: SVGGElement[] | null = null;
+        const chunks: Chunk[] = [];
+        const ds: string[] = [];
+        let at = 0;
+        for (let i = 0; i < lengths.length; ) {
+          // segments until the chunk is CHUNK long, and its bounds (the curves stay inside their control points)
+          const from = i;
+          let length = 0;
+          let d = `M${nums[from * 6]},${nums[from * 6 + 1]}`;
+          let l = nums[from * 6];
+          let r = l;
+          let t = nums[from * 6 + 1];
+          let b = t;
+          while (i < lengths.length && (i === from || length < CHUNK)) {
+            const o = i * 6 + 2;
+            d += ` C${nums[o]},${nums[o + 1]} ${nums[o + 2]},${nums[o + 3]} ${nums[o + 4]},${nums[o + 5]}`;
+            for (let k = o; k < o + 6; k += 2) {
+              l = Math.min(l, nums[k]);
+              r = Math.max(r, nums[k]);
+              t = Math.min(t, nums[k + 1]);
+              b = Math.max(b, nums[k + 1]);
+            }
+            length += lengths[i++];
+          }
+          const paths = [svg("path", { d }, backGroup)];
+          if (glyphZones.some((z) => l < z.r && r > z.l && t < z.b && b > z.t)) {
+            frontGroups ??= [svg("g", {}, frontLayer), svg("g", {}, frontInkLayer)];
+            for (const g of frontGroups) paths.push(svg("path", { d }, g));
+          }
+          for (const path of paths) path.style.visibility = "hidden";
+          chunks.push({ paths, at, length, state: HIDDEN, drawn: 0 });
+          if (withGlow) ds.push(d);
+          at += length;
         }
         const added: Stroke = {
-          back: backPath,
-          front,
-          glow: withGlow ? svg("path", { d }, glowLayer) : null,
-          length,
+          groups: [backGroup, ...(frontGroups ?? [])],
+          chunks,
+          glow: withGlow ? svg("path", { d: ds.join(" ") }, glowLayer) : null,
+          glowOn: false,
+          length: at,
           offset,
           drawn: -1,
         };
-        offset += length;
+        offset += at;
         return added;
+      };
+      const runOf = (d: string): Run => {
+        const nums = parsePath(d);
+        return { nums, lengths: segmentLengths(nums) };
       };
       placed.forEach((p, i) => {
         if (i > 0) {
@@ -480,7 +564,7 @@ export function InkLine() {
           // stroke (grass leaves reach past the start) and in along the
           // ground, never sideways through the picture
           const clear = Math.max(12, stroke * 4);
-          const left = Math.min(p.start[0], ...samplePath(p.d, 12).map((q) => q[0])) - clear;
+          const left = sampleCurve(p.run.nums, 12).reduce((m, q) => Math.min(m, q[0]), p.start[0]) - clear;
           const above: Point = [left, p.map(0, 0)[1] - clear];
           const over = previous.end[1] < above[1] && p.start[1] > above[1];
           const ctx = { obstacles: [...obstacles, ...headlineLines], width, straight: true };
@@ -489,18 +573,21 @@ export function InkLine() {
             const turn = Math.min(clear * 2, p.start[0] - left);
             way.push({ p: [left, p.start[1] - turn], dir: [0, 1] }, { p: p.start, dir: [1, 0] });
           }
-          const link = addStroke(pathData(way, true), false);
+          const link = addStroke(runOf(pathData(way, true)), false);
           pieces.push({ kind: "link", ...link });
         }
         // the hero: the line begins as the tail of the title's last letter and
         // runs through its full stop into the drawing
-        let d = p.d;
+        let run = p.run;
         const title = i === 0 ? headlines.filter((h) => follows(h.el, p.box)).pop() : undefined;
         if (title) {
-          const stitch = heroStitch(title, p.start, p.startDir, obstacles, width, samplePath(p.d), stroke);
-          if (stitch && stitch.length > 1) d = `${pathData(stitch)} ${p.d.replace(/^M\S+\s*/, "")}`;
+          const stitch = heroStitch(title, p.start, p.startDir, obstacles, width, sampleCurve(p.run.nums), stroke);
+          if (stitch && stitch.length > 1) {
+            const lead = runOf(pathData(stitch));
+            run = { nums: lead.nums.concat(p.run.nums.slice(2)), lengths: lead.lengths.concat(p.run.lengths) };
+          }
         }
-        pieces.push({ kind: "scene", placed: p, ...addStroke(d, p.glow) });
+        pieces.push({ kind: "scene", placed: p, ...addStroke(run, p.glow) });
       });
       line.pieces = pieces;
       line.total = offset;
@@ -531,7 +618,7 @@ export function InkLine() {
           );
           text.textContent = label.text;
           if (label.deco) text.style.textDecoration = label.deco;
-          line.labels.push({ el: text, at: piece.offset + piece.length * (label.at ?? 1) });
+          line.labels.push({ el: text, at: piece.offset + piece.length * (label.at ?? 1), on: false });
         }
         if (scene.logo) {
           const [lx, ly, lw, lh] = scene.logo;
@@ -552,7 +639,8 @@ export function InkLine() {
           line.finale = {
             el: logo,
             at: piece.offset + piece.length - 2,
-            handover: [piece.back, ...piece.front],
+            on: false,
+            handover: piece.groups,
           };
         }
       });
@@ -665,18 +753,47 @@ export function InkLine() {
 
       for (const piece of line.pieces) {
         const drawn = Math.max(0, Math.min(piece.length, line.shown - piece.offset));
-        if (Math.abs(drawn - piece.drawn) < 0.25) continue;
+        if (drawn === piece.drawn) continue;
         piece.drawn = drawn;
-        const dash = `${piece.length + 1 - drawn}`;
-        piece.back.style.strokeDashoffset = dash;
-        for (const path of piece.front) path.style.strokeDashoffset = dash;
-        piece.glow?.classList.toggle("is-on", drawn >= piece.length - 0.5);
+        // only the chunks whose state changes are touched: in a frame, that is the one under the pen
+        for (const chunk of piece.chunks) {
+          const part = Math.max(0, Math.min(chunk.length, drawn - chunk.at));
+          const state = part <= 0 ? HIDDEN : part >= chunk.length ? FULL : PART;
+          if (state === chunk.state && (state !== PART || Math.abs(part - chunk.drawn) < 0.25)) continue;
+          for (const path of chunk.paths) {
+            const { style } = path;
+            if (state === HIDDEN) style.visibility = "hidden";
+            else if (state === FULL) {
+              style.visibility = "";
+              style.strokeDasharray = "";
+              style.strokeDashoffset = "";
+            } else {
+              if (chunk.state !== PART) {
+                style.visibility = "";
+                style.strokeDasharray = `${chunk.length + 1} ${chunk.length + 1}`;
+              }
+              style.strokeDashoffset = `${chunk.length + 1 - part}`;
+            }
+          }
+          chunk.state = state;
+          chunk.drawn = part;
+        }
+        const glowOn = drawn >= piece.length - 0.5;
+        if (piece.glow && glowOn !== piece.glowOn) piece.glow.classList.toggle("is-on", glowOn);
+        piece.glowOn = glowOn;
       }
-      for (const label of line.labels) label.el.style.opacity = line.shown >= label.at ? "1" : "0";
+      for (const label of line.labels) {
+        const on = line.shown >= label.at;
+        if (on !== label.on) label.el.style.opacity = on ? "1" : "0";
+        label.on = on;
+      }
       if (line.finale) {
         const arrived = line.shown >= line.finale.at;
-        line.finale.el.classList.toggle("is-on", arrived);
-        for (const path of line.finale.handover) path.classList.toggle("ink-handover", arrived);
+        if (arrived !== line.finale.on) {
+          line.finale.el.classList.toggle("is-on", arrived);
+          for (const group of line.finale.handover) group.classList.toggle("ink-handover", arrived);
+        }
+        line.finale.on = arrived;
       }
     }
 
@@ -700,8 +817,8 @@ export function InkLine() {
       if (!pointerLive || line.pointer >= 1) return;
       const hero = line.pieces.find((p) => p.kind === "scene" && p.placed.interactive);
       if (!hero || hero.kind !== "scene") return;
-      const r = hero.placed.box.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > window.innerHeight) return;
+      // from the layout, not the box: a read here would force a layout per move
+      if (hero.placed.bottomY < view.y || hero.placed.topY > view.y + view.h) return;
       if (line.lastX !== null) {
         line.pointer = Math.min(1, line.pointer + Math.hypot(e.clientX - line.lastX, e.clientY - line.lastY) / POINTER_TRAVEL);
         requestDraw();
@@ -712,13 +829,15 @@ export function InkLine() {
 
     let layoutFrame = 0;
     let disposed = false;
+    /** laid out at least once: until then the resizes wait for the first layout */
+    let ready = false;
     /** the page size the line was last laid out for */
     let laidOut = "";
     const pageSize = () => `${page.clientWidth}x${page.clientHeight}`;
     // a resize that leaves the page the same size (a phone's address bar
     // showing or hiding) changes nothing the line depends on
     const requestLayout = (force?: unknown) => {
-      if (disposed || (force !== true && pageSize() === laidOut)) return;
+      if (disposed || !ready || (force !== true && pageSize() === laidOut)) return;
       cancelAnimationFrame(layoutFrame);
       layoutFrame = requestAnimationFrame(() => {
         laidOut = pageSize();
@@ -740,10 +859,25 @@ export function InkLine() {
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onScroll, { passive: true });
     if (!still) window.addEventListener("pointermove", onPointerMove, { passive: true });
-    laidOut = pageSize();
-    layout();
-    // headline glyph boxes move when the webfonts land
-    document.fonts?.ready.then(() => requestLayout(true));
+    const firstLayout = () => {
+      if (disposed || ready) return;
+      ready = true;
+      laidOut = pageSize();
+      layout();
+      markInkReady();
+    };
+    // (App fires the reveal after this mounts when there is no loader, so look for it)
+    if (isRevealed() || !document.querySelector(".loader") || !document.fonts) {
+      // no loader over the page: lay out now, and again when the webfonts
+      // land (the headline glyph boxes move)
+      firstLayout();
+      document.fonts?.ready.then(() => requestLayout(true));
+    } else {
+      // the loader covers the page until the webfonts are in, and its first
+      // frame waits for this layout: one layout, before anything moves,
+      // rather than one now and another part way through the loader
+      document.fonts.ready.then(firstLayout, firstLayout);
+    }
 
     return () => {
       disposed = true;

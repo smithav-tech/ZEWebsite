@@ -3,7 +3,7 @@ import gsap from "gsap";
 import { CustomEase } from "gsap/CustomEase";
 import { SplitText } from "gsap/SplitText";
 import { brand } from "./content";
-import { REVEAL_EVENT } from "./reveal";
+import { REVEAL_EVENT, whenInkReady } from "./reveal";
 import "./loader.css";
 
 gsap.registerPlugin(CustomEase, SplitText);
@@ -87,8 +87,14 @@ export function Loader({ onDone }: { onDone: () => void }) {
           `path(evenodd, "M0 0H${w}V${h}H0Z M${(cx - r).toFixed(1)} ${cy} ` +
           `a${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(2 * r).toFixed(1)} 0 a${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(-2 * r).toFixed(1)} 0Z")`;
       };
+      // the number is written only when it changes, not on every frame
+      let shown = -1;
       const progress = () => {
-        countEl.textContent = String(Math.round(count.v)).padStart(2, "0");
+        const n = Math.round(count.v);
+        if (n !== shown) {
+          shown = n;
+          countEl.textContent = String(n).padStart(2, "0");
+        }
         ring.style.strokeDashoffset = String(RING_C * (1 - count.v / 100));
       };
       gsap.set(q(".loader__mark, .loader__brand, .loader__caption, .loader__count"), { visibility: "visible" });
@@ -102,10 +108,11 @@ export function Loader({ onDone }: { onDone: () => void }) {
         .from(split.chars, { opacity: 0, y: 8, duration: 0.5, stagger: 0.018 }, 0.45)
         .from(q(".loader__caption, .loader__count"), { opacity: 0, duration: 0.6 }, 0.3)
         .to(count, { v: 100, duration: 1.9, ease: "power2.inOut", onUpdate: progress }, 0)
-        .to(q(".loader__ring"), { opacity: 0, scale: 1.15, svgOrigin: "0 0", duration: 0.5, ease: "power2.in" }, 2.05)
-        .to(q(".loader__mark"), { rotate: 120, scale: 0.15, opacity: 0, duration: 0.8, ease: "power3.in" }, 2.05)
-        .to(q(".loader__brand"), { y: -20, opacity: 0, duration: 0.5, ease: "power2.in" }, 2.05)
-        .to(q(".loader__caption, .loader__count"), { opacity: 0, duration: 0.4, ease: "power2.in" }, 2.05)
+        // the exits give their start values, so nothing reads computed style mid-animation
+        .fromTo(q(".loader__ring"), { opacity: 1, scale: 1 }, { opacity: 0, scale: 1.15, svgOrigin: "0 0", duration: 0.5, ease: "power2.in", immediateRender: false }, 2.05)
+        .fromTo(q(".loader__mark"), { rotate: 0, scale: 1, opacity: 1 }, { rotate: 120, scale: 0.15, opacity: 0, duration: 0.8, ease: "power3.in", immediateRender: false }, 2.05)
+        .fromTo(q(".loader__brand"), { y: 0, opacity: 1 }, { y: -20, opacity: 0, duration: 0.5, ease: "power2.in", immediateRender: false }, 2.05)
+        .fromTo(q(".loader__caption, .loader__count"), { opacity: 1 }, { opacity: 0, duration: 0.4, ease: "power2.in", immediateRender: false }, 2.05)
         // a single milk drop falls, hits the sheet, and the page opens from its ripple
         .fromTo(q(".loader__drop"), { y: -h * 0.6, opacity: 1, scaleY: 1.5, scaleX: 0.8 }, { y: 0, scaleY: 1.25, scaleX: 0.9, duration: 0.55, ease: "power2.in", immediateRender: false }, 2.2)
         .to(q(".loader__drop"), { scaleY: 0.2, scaleX: 2.2, opacity: 0, duration: 0.18, ease: "power2.out" })
@@ -115,9 +122,20 @@ export function Loader({ onDone }: { onDone: () => void }) {
         .call(unlock, [], 2.8)
         .to(hole, { r: Math.hypot(w, h) * 0.6, duration: 1.2, ease: "power3.inOut", onUpdate: openHole }, 2.8)
         .call(onDone);
+      // run the playhead to the end and back, callbacks off, before the first
+      // frame: every tween reads its start values here, while nothing shows,
+      // rather than as it starts, where each read forces a style recalc and a
+      // layout in the middle of the animation
+      tl.progress(1, true).progress(0, true);
     };
 
-    (document.fonts?.ready ?? Promise.resolve()).then(start, start);
+    // start once the webfonts are in and the ink line has laid out, so its heavy
+    // layout never lands in the timeline's first frames
+    let cancelInk: (() => void) | undefined;
+    const startWhenInk = () => {
+      if (!cancelled) cancelInk = whenInkReady(start);
+    };
+    (document.fonts?.ready ?? Promise.resolve()).then(startWhenInk, startWhenInk);
     // the live site never lets the loader block for more than 6 s
     const failsafe = setTimeout(() => {
       if (tl) return;
@@ -129,6 +147,7 @@ export function Loader({ onDone }: { onDone: () => void }) {
     return () => {
       cancelled = true;
       clearTimeout(failsafe);
+      cancelInk?.();
       tl?.kill();
       split?.revert();
       removeLock();

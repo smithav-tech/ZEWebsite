@@ -1287,16 +1287,28 @@ sub {
   transition: opacity 0.25s ease;
 }
 .tip-hint-dot {
+  position: relative;
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
   background: var(--lime);
-  box-shadow: 0 0 0 0 rgba(166, 207, 114, 0.7);
+}
+/* the pulse: a lime disc growing out 0.6rem round the dot as it fades, in
+   scale and opacity so it runs on the compositor (a growing box-shadow
+   repainted every frame for as long as the page was open) */
+.tip-hint-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(166, 207, 114, 0.7);
   animation: tip-pulse 2s ease-out infinite;
 }
 @keyframes tip-pulse {
   to {
-    box-shadow: 0 0 0 0.6rem rgba(166, 207, 114, 0);
+    /* (0.55rem + 2 x 0.6rem) / 0.55rem */
+    transform: scale(3.1818);
+    opacity: 0;
   }
 }
 .tip-card {
@@ -1408,8 +1420,9 @@ sub {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tip-hint-dot {
+  .tip-hint-dot::after {
     animation: none;
+    opacity: 0;
   }
   .tip-card,
   .scene-art--tip:hover .tip-card,

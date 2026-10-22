@@ -49,6 +49,7 @@ Every chapter doodle follows these rules.
 ## Ink line constraints
 
 - InkLine measures the page only at load, resize and font load, never on scroll. It reads `.doodle-box` rects, the headline glyphs (`.hero-title, .display`) and copy "obstacles" (p, li, h3, `.btn` and so on in `main`). From the Hero through the last scene (CarbonValue, `#offsets`), don't put resting or entrance transforms on any of those, or the line misaligns. Use paint-only effects (shadow, filter) on headlines and hover-time transforms only on copy. Sections after the last scene (Team, Projects, Partners, footer) are free for transforms.
+- Performance: InkLine draws each piece as ~160px chunks (only the chunk under the pen is dashed; front copies exist only near headlines), and its first layout waits for the webfonts while the loader is up, then fires `ze:ink-ready` (`reveal.ts`), which the loader waits for before its first frame. The milk doesn't render until the reveal. Keep heavy work out of the loader's timeline.
 - Layering: `.ink--back` (z 0, the line and doodles) sits behind `main` (z 1), so an opaque background in `main` hides the line. Decoration meant to sit under the drawings goes in a layer inside `.page` before `<InkLine />`.
 - Every drawing except the finale enters from its left edge and every scene except the last leaves through its bottom edge. The links in `route.ts` depend on this. Labels must sit clear of the line at every size.
 

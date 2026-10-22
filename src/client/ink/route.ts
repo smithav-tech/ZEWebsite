@@ -445,9 +445,39 @@ export function pathData(points: Waypoint[], straightWay = false) {
   return d;
 }
 
+/** the numbers of absolute M + C path data: the M point, then six per C segment */
+export const parsePath = (d: string): number[] => (d.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+
 /** points along absolute M + C path data, about every `step` px */
-export function samplePath(d: string, step = 6): Vec[] {
-  const nums = (d.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+export const samplePath = (d: string, step = 6): Vec[] => sampleCurve(parsePath(d), step);
+
+// Gauss-Legendre nodes and weights on [0, 1], for curve lengths
+const GAUSS_T = [0.5, 0.2307653449471585, 0.7692346550528415, 0.0469100770306680, 0.9530899229693320];
+const GAUSS_W = [0.2844444444444444, 0.2393143352496832, 0.2393143352496832, 0.1184634425280945, 0.1184634425280945];
+
+/** the length of each C segment of parsed path numbers (parsePath), worked out rather than measured from the DOM */
+export function segmentLengths(nums: ArrayLike<number>): number[] {
+  const out: number[] = [];
+  for (let i = 0; i + 7 < nums.length; i += 6) {
+    // the derivative's control points, over three
+    const ax = nums[i + 2] - nums[i], ay = nums[i + 3] - nums[i + 1];
+    const bx = nums[i + 4] - nums[i + 2], by = nums[i + 5] - nums[i + 3];
+    const cx = nums[i + 6] - nums[i + 4], cy = nums[i + 7] - nums[i + 5];
+    let sum = 0;
+    for (let k = 0; k < 5; k++) {
+      const t = GAUSS_T[k];
+      const u = 1 - t;
+      const dx = u * u * ax + 2 * u * t * bx + t * t * cx;
+      const dy = u * u * ay + 2 * u * t * by + t * t * cy;
+      sum += GAUSS_W[k] * Math.hypot(dx, dy);
+    }
+    out.push(3 * sum);
+  }
+  return out;
+}
+
+/** points along parsed path numbers (parsePath), about every `step` px */
+export function sampleCurve(nums: ArrayLike<number>, step = 6): Vec[] {
   const out: Vec[] = [];
   let p0: Vec = [nums[0], nums[1]];
   out.push(p0);
@@ -461,15 +491,36 @@ export function samplePath(d: string, step = 6): Vec[] {
 }
 
 /**
- * Does the line along the waypoints keep at least `gap` px from the drawing
- * (sampled points), apart from within `near` px of where it joins it?
+ * A test for "more than `gap` px from every point of the drawing" (sampled
+ * points). The points go into a grid of `gap`-sized cells once, so each test
+ * looks only at the nine cells round it, not at the whole drawing.
  */
-export function keepsClear(points: Waypoint[], drawing: Vec[], gap: number, near: number) {
+export function clearOf(drawing: Vec[], gap: number): (q: Vec) => boolean {
+  const cells = new Map<number, Vec[]>();
+  const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
+  for (const r of drawing) {
+    const k = key(Math.floor(r[0] / gap), Math.floor(r[1] / gap));
+    const cell = cells.get(k);
+    if (cell) cell.push(r);
+    else cells.set(k, [r]);
+  }
+  return (q) => {
+    const cx = Math.floor(q[0] / gap);
+    const cy = Math.floor(q[1] / gap);
+    for (let x = cx - 1; x <= cx + 1; x++) {
+      for (let y = cy - 1; y <= cy + 1; y++) {
+        for (const r of cells.get(key(x, y)) ?? []) if (Math.hypot(r[0] - q[0], r[1] - q[1]) <= gap) return false;
+      }
+    }
+    return true;
+  };
+}
+
+/**
+ * Does the line along the waypoints keep clear of the drawing (a clearOf
+ * test), apart from within `near` px of where it joins it?
+ */
+export function keepsClear(points: Waypoint[], clear: (q: Vec) => boolean, near: number) {
   const join = points[points.length - 1].p;
-  const path = samplePath(pathData(points), 4);
-  return path.every(
-    (q) =>
-      Math.hypot(q[0] - join[0], q[1] - join[1]) < near ||
-      drawing.every((r) => Math.abs(r[0] - q[0]) > gap || Math.abs(r[1] - q[1]) > gap || Math.hypot(r[0] - q[0], r[1] - q[1]) > gap),
-  );
+  return samplePath(pathData(points), 4).every((q) => Math.hypot(q[0] - join[0], q[1] - join[1]) < near || clear(q));
 }
